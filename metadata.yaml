@@ -39,8 +39,6 @@ resources:
     type: oci-image
     description: OCI image for tmate-ssh-server
 
-requires:
-
 provides:
   debug-ssh:
     interface: debug_ssh
