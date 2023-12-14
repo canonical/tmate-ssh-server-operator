@@ -1,7 +1,7 @@
-# tmate-k8s-operator
+# tmate-ssh-server-operator
 
 A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
-deploying and managing [Tmate self-hosted server](https://tmate.io/) on Kubernetes. Tmate is an
+deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
 open source terminal multiplexer, providing instant terminal sharing capabilities.
 
 Tmate is a terminal multiplexer that allows remote terminal sharing. It enables users to share
@@ -19,21 +19,21 @@ machines.
 
 ## Project and community
 
-The tmate-ssh-server-k8s Operator is a member of the Ubuntu family. It's an open source
+The tmate-ssh-server Operator is a member of the Ubuntu family. It's an open source
 project that warmly welcomes community projects, contributions, suggestions,
 fixes and constructive feedback.
 * [Code of conduct](https://ubuntu.com/community/code-of-conduct)
 * [Get support](https://discourse.charmhub.io/)
 * [Join our online chat](https://chat.charmhub.io/charmhub/channels/charm-dev)
-* [Contribute](https://charmhub.io/jenkins-k8s/docs/contributing)
-* [Getting Started](https://charmhub.io/tmate-ssh-server-k8s/docs/getting-started)
-Thinking about using the tmate-ssh-server-k8s Operator for your next project? 
+* [Contribute](https://charmhub.io/tmate-ssh-server/docs/contributing)
+* [Getting Started](https://charmhub.io/tmate-ssh-server/docs/getting-started)
+Thinking about using the tmate-ssh-server Operator for your next project? 
 [Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
 
 ---
 
 For further details,
-[see the charm's detailed documentation](https://charmhub.io/tmate-ssh-server-k8s/docs).
+[see the charm's detailed documentation](https://charmhub.io/tmate-ssh-server/docs).
 
 ## Generating src docs for every commit
 

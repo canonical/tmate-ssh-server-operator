@@ -1,0 +1,13 @@
+[Unit]
+Description=Docker instance to serve tmate-ssh-server.
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory={{ WORKDIR }}
+ExecStart=sudo docker run --net=host --cap-add SYS_ADMIN -v {{ KEYS_DIR }}:/keys \
+    --env SSH_KEYS_PATH=/keys tmate/tmate-ssh-server -h 0.0.0.0 -p {{ PORT }} -k /keys
+
+[Install]
+WantedBy=multi-user.target

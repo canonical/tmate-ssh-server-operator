@@ -1,16 +1,13 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-name: tmate-ssh-server-k8s
-assumes:
-  - k8s-api
-display-name: Tmate-ssh-server K8s
-summary: Tmate SSH Relay Server
+name: tmate-ssh-server
+display-name: Tmate-ssh-server
 maintainers:
   - https://launchpad.net/~canonical-is-devops
 description: |
   A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
-  deploying and managing [Tmate self-hosted server](https://tmate.io/) on Kubernetes. Tmate is an
+  deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
   open source terminal multiplexer, providing instant terminal sharing capabilities.
 
   Tmate is a terminal multiplexer that allows remote terminal sharing. It enables users to share
@@ -25,19 +22,14 @@ description: |
   [Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the running
   machines.
 docs: 
-issues: https://github.com/canonical/tmate-ssh-server-k8s-operator/issues
-source: https://github.com/canonical/tmate-ssh-server-k8s-operator
+issues: https://github.com/canonical/tmate-ssh-server-operator/issues
+source: https://github.com/canonical/tmate-ssh-server-operator
+summary: Tmate SSH Relay Server
+series:
+  - jammy
 tags:
   - application_development
   - ops
-containers:
-  tmate-ssh-server:
-    resource: tmate-ssh-server-image
-
-resources:
-  tmate-ssh-server-image:
-    type: oci-image
-    description: OCI image for tmate-ssh-server
 
 provides:
   debug-ssh:
