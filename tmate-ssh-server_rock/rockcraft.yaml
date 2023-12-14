@@ -1,0 +1,55 @@
+# Copyright 2023 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: tmate-ssh-server
+summary: Tmate SSH server rock
+description: tmate-ssh-server OCI image for the tmate-ssh-server-k8s charm
+version: "1.0"
+base: ubuntu@22.04
+build-base: ubuntu@22.04
+license: Apache-2.0
+platforms:
+  amd64:
+run-user: _daemon_  # UID/GID 584792
+services:
+  tmate-ssh-server:
+    override: merge
+    summary: The tmate-ssh-server.
+    command: ./tmate-ssh-server -p 10022 -h 0.0.0.0
+    working-dir: /srv/tmate-ssh-server/
+    startup: enabled
+environment:
+  LC_ALL: C.utf8
+parts:
+  tmate-ssh-server:
+    plugin: nil
+    build-packages:
+      - automake
+      - build-essential
+      - cmake
+      - git-core
+      - pkg-config
+      - libevent-dev
+      - libmsgpack-dev
+      - libncurses-dev
+      - libssh-dev
+      - libtool
+      - ruby
+      - zlib1g-dev
+    stage-packages:
+      - bash
+      - libevent-dev
+      - libmsgpack-dev
+      - libssh-dev
+      - openssh-client
+    override-build: |
+      git clone https://github.com/tmate-io/tmate-ssh-server.git && cd tmate-ssh-server
+      ./create_keys.sh
+      ./autogen.sh && ./configure && make
+    override-prime: |
+      craftctl default  
+      /bin/bash -c "mkdir -p --mode=775 srv/tmate-ssh-server/"
+      cp ${CRAFT_PART_BUILD}/tmate-ssh-server/tmate-ssh-server srv/tmate-ssh-server/
+      cp ${CRAFT_PART_BUILD}/tmate-ssh-server/create_keys.sh srv/tmate-ssh-server/
+      cp -r ${CRAFT_PART_BUILD}/tmate-ssh-server/keys srv/tmate-ssh-server/
+      /bin/bash -c "chown -R 584792:584792 srv/tmate-ssh-server/"
