@@ -134,9 +134,9 @@ def generate_tmate_conf(host: str) -> str:
     ED25519_SIG = ed25519_stdout
     return textwrap.dedent(
         f"""
-            set -g tmate-server-host {host}
-            set -g tmate-server-port {PORT}
-            set -g tmate-server-rsa-fingerprint {RSA_SIG}
-            set -g tmate-server-ed25519-fingerprint {ED25519_SIG}
-            """
+        set -g tmate-server-host {host}
+        set -g tmate-server-port {PORT}
+        set -g tmate-server-rsa-fingerprint {RSA_SIG}
+        set -g tmate-server-ed25519-fingerprint {ED25519_SIG}
+        """
     )
