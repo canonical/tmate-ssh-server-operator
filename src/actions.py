@@ -38,7 +38,7 @@ class Observer(ops.Object):
             return
         try:
             conf = tmate.generate_tmate_conf(str(self.state.ip_addr))
-        except tmate.KeyInstallError as exc:
+        except tmate.FingerPrintError as exc:
             logger.error("Failed to generate .tmate.conf, %s.", exc)
             event.fail("Failed to generate .tmate.conf. See juju debug-log output.")
             return

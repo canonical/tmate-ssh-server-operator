@@ -33,4 +33,4 @@ tags:
 
 provides:
   debug-ssh:
-    interface: debug_ssh
+    interface: debug-ssh

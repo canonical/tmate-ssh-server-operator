@@ -8,6 +8,7 @@ import typing
 
 import ops
 
+SSH_DEBUG_INTEGRATION_NAME = "ssh-debug"
 
 @dataclasses.dataclass(frozen=True)
 class State:
