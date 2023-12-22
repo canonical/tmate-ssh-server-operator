@@ -8,7 +8,8 @@ import typing
 
 import ops
 
-SSH_DEBUG_INTEGRATION_NAME = "ssh-debug"
+DEBUG_SSH_INTEGRATION_NAME = "debug-ssh"
+
 
 @dataclasses.dataclass(frozen=True)
 class State:

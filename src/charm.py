@@ -11,6 +11,7 @@ import typing
 import ops
 
 import actions
+import sshdebug
 import tmate
 from state import State
 
@@ -32,6 +33,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         super().__init__(*args)
         self.state = State.from_charm(self)
         self.actions = actions.Observer(self, self.state)
+        self.sshdebug = sshdebug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
 

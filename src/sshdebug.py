@@ -7,7 +7,7 @@ import logging
 import ops
 
 import tmate
-from state import SSH_DEBUG_INTEGRATION_NAME, State
+from state import DEBUG_SSH_INTEGRATION_NAME, State
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class Observer(ops.Object):
         self.state = state
 
         charm.framework.observe(
-            charm.on[SSH_DEBUG_INTEGRATION_NAME].relation_joined,
+            charm.on[DEBUG_SSH_INTEGRATION_NAME].relation_joined,
             self._on_ssh_debug_relation_joined,
         )
 
@@ -45,9 +45,9 @@ class Observer(ops.Object):
 
         event.relation.data[self.model.unit].update(
             {
-                "host": self.state.ip_addr,
-                "port": tmate.PORT,
-                "rsa-fingerprint": fingerprints.rsa,
-                "ed25519-fingerprint": fingerprints.ed25519,
+                "host": str(self.state.ip_addr),
+                "port": str(tmate.PORT),
+                "rsa_fingerprint": fingerprints.rsa,
+                "ed25519_fingerprint": fingerprints.ed25519,
             }
         )
