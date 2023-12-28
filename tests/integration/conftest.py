@@ -8,7 +8,6 @@ import typing
 import pytest
 import pytest_asyncio
 from helpers import wait_for
-from juju.application import Application
 from juju.client._definitions import DetailedStatus, FullStatus, MachineStatus
 from juju.machine import Machine
 from juju.model import Model

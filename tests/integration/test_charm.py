@@ -5,11 +5,9 @@
 import logging
 import os
 import secrets
-import tempfile
 
 # library stubs for paramiko are in a separate python package and does not need to be installed.
 import paramiko  # type: ignore
-import pytest
 from juju.action import Action
 from juju.application import Application
 from juju.machine import Machine
