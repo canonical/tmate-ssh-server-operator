@@ -36,48 +36,12 @@ async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> st
     return charm
 
 
-@pytest.fixture(scope="module", name="github_runner_charm")
-async def github_runner_charm_fixture(request: pytest.FixtureRequest) -> str:
-    """The path to GitHub Runner charm."""
-    charm = request.config.getoption("--github-runner-charm-file")
-    charm = f"./{charm}"
-
-    return charm
-
-
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
 async def tmate_ssh_server_fixture(model: Model, charm: str):
     """The tmate-ssh-server application fixture."""
     app = await model.deploy(charm)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     return app
-
-
-@pytest_asyncio.fixture(scope="module", name="github_runner")
-async def github_runner_fixture(
-    model: Model, github_runner_charm: str, request: pytest.FixtureRequest
-):
-    """The GitHub runner application fixture."""
-    pat = request.config.getoption("--pat")
-    path = request.config.getoption("--path")
-    app = await model.deploy(
-        github_runner_charm,
-        constraints="cores=4 mem=16G root-disk=20G virt-type=virtual-machine",
-        config={
-            "token": pat,
-            "path": path,
-        },
-    )
-    return app
-
-
-@pytest_asyncio.fixture(scope="module", name="relate_tmate_github")
-async def relate_tmate_github_fixture(
-    model: Model, tmate_ssh_server: Application, github_runner: Application
-):
-    """Relate tmate-ssh-server and GitHub runner charms."""
-    await tmate_ssh_server.add_relation("debug-ssh", github_runner.charm_name)
-    await model.wait_for_idle(apps=[tmate_ssh_server.charm_name, github_runner.charm_name])
 
 
 @pytest_asyncio.fixture(scope="module", name="tmate_machine")

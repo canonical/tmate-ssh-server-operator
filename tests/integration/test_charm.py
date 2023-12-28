@@ -32,9 +32,8 @@ async def test_ssh_connection(
     unit: Unit = next(iter(tmate_ssh_server.units))
     action: Action = await unit.run_action("get-server-config")
     await action.wait()
-    logger.info("ACTION RESULTS: %s", action.results)
     config = action.results["tmate-config"]
-    logger.info("Writing config file")
+
     with open(secrets.token_hex(8), mode="x", encoding="utf-8") as config_file:
         config_file.write(config)
     (retcode, stdout, stderr) = await ops_test.juju(
