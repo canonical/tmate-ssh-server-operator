@@ -14,3 +14,9 @@ def pytest_addoption(parser: pytest.Parser):
     """
     # The prebuilt charm file.
     parser.addoption("--charm-file", action="store", default="")
+    # The GitHub Runner operator charm file.
+    parser.addoption("--github-runner-charm-file", action="store", default="")
+    # The GitHub Personal Access Token.
+    parser.addoption("--pat", action="store", default="")
+    # The GitHub repository path <owner>/<repo>.
+    parser.addoption("--path", action="store", default="")

@@ -26,9 +26,6 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         Args:
             args: Arguments to initialize the charm base.
-
-        Raises:
-            RuntimeError: if invalid state value was encountered from relation.
         """
         super().__init__(*args)
         self.state = State.from_charm(self)
@@ -42,6 +39,11 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         Args:
             event: The event emitted on install hook.
+
+        Raises:
+            DependencyInstallError: if the dependencies required to start charm has failed.
+            KeyInstallError: if the ssh-key installation and fingerprint generation failed.
+            DaemonStartError: if the workload daemon was unable to start.
         """
         try:
             self.unit.status = ops.MaintenanceStatus("Installing packages.")

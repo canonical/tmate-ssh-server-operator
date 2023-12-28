@@ -7,7 +7,9 @@
 
 import dataclasses
 import ipaddress
-import subprocess
+
+# subprocess module is required, the security implications are considered.
+import subprocess  # nosec
 import textwrap
 import typing
 from pathlib import Path
@@ -62,8 +64,13 @@ class FingerPrintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
 
 
-def install_dependencies():
-    """Install dependenciese required to start tmate-ssh-server container."""
+def install_dependencies() -> None:
+    """Install dependenciese required to start tmate-ssh-server container.
+
+    Raises:
+        DependencyInstallError: if there was something wrong installing the apt package
+            dependencies.
+    """
     try:
         apt.update()
         apt.add_package(["docker.io", "openssh-client"])
@@ -71,11 +78,14 @@ def install_dependencies():
         raise DependencyInstallError from exc
 
 
-def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]):
+def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:
     """Install key creation script and generate keys.
 
     Args:
         host_ip: The charm host's public IP address.
+
+    Raises:
+        KeyInstallError: if there was an error creating ssh keys.
     """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     template = environment.get_template("create_keys.sh.j2")
@@ -84,15 +94,21 @@ def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Addr
     KEYS_DIR.mkdir(parents=True, exist_ok=True)
     CREATE_KEYS_SCRIPT_PATH.write_text(script, encoding="utf-8")
     try:
-        subprocess.run(["/usr/bin/chown", "-R", "ubuntu:ubuntu", str(WORK_DIR)])
+        # B603:subprocess_without_shell_equals_true false positive
+        # see https://github.com/PyCQA/bandit/issues/333
+        subprocess.check_call(["/usr/bin/chown", "-R", "ubuntu:ubuntu", str(WORK_DIR)])  # nosec
         CREATE_KEYS_SCRIPT_PATH.chmod(755)
-        subprocess.check_call(["/usr/bin/sudo", str(CREATE_KEYS_SCRIPT_PATH)])
+        subprocess.check_call(["/usr/bin/sudo", str(CREATE_KEYS_SCRIPT_PATH)])  # nosec
     except subprocess.CalledProcessError as exc:
         raise KeyInstallError from exc
 
 
-def start_daemon():
-    """Install unit files and start daemon."""
+def start_daemon() -> None:
+    """Install unit files and start daemon.
+
+    Raises:
+        DaemonStartError: if there was an error starting the tmate-ssh-server docker process.
+    """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
         WORKDIR=WORK_DIR,
@@ -101,9 +117,11 @@ def start_daemon():
     )
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
-        subprocess.check_call(["/usr/bin/systemctl", "daemon-reload"])
-        subprocess.check_call(["/usr/bin/systemctl", "restart", "tmate-ssh-server"])
-        subprocess.check_call(["/usr/bin/systemctl", "enable", "tmate-ssh-server"])
+        # B603:subprocess_without_shell_equals_true false positive
+        # see https://github.com/PyCQA/bandit/issues/333
+        subprocess.check_call(["/usr/bin/systemctl", "daemon-reload"])  # nosec
+        subprocess.check_call(["/usr/bin/systemctl", "restart", "tmate-ssh-server"])  # nosec
+        subprocess.check_call(["/usr/bin/systemctl", "enable", "tmate-ssh-server"])  # nosec
     except subprocess.CalledProcessError as exc:
         raise DaemonStartError from exc
 
@@ -136,13 +154,13 @@ def get_fingerprints() -> FingerPrints:
     try:
         rsa_stdout = str(
             subprocess.check_output(
-                ["ssh-keygen", "-l", "-E", "SHA256", "-f", str(RSA_PUB_KEY_PATH)]
+                ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(RSA_PUB_KEY_PATH)]
             ),
             encoding="utf-8",
         ).split()[1]
         ed25519_stdout = str(
             subprocess.check_output(
-                ["ssh-keygen", "-l", "-E", "SHA256", "-f", str(ED25519_PUB_KEY_PATH)]
+                ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(ED25519_PUB_KEY_PATH)]
             ),
             encoding="utf-8",
         ).split()[1]
@@ -156,10 +174,13 @@ def generate_tmate_conf(host: str) -> str:
     """Generate the .tmate.conf values from generated keys.
 
     Args:
-        ip_addr: The host IP address.
+        host: The host IP address.
 
     Raises:
         FingerPrintError: if there was an error generating fingerprints from public keys.
+
+    Returns:
+        The tmate config file contents.
     """
     try:
         fingerprints = get_fingerprints()

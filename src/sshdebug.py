@@ -20,6 +20,7 @@ class Observer(ops.Object):
 
         Args:
             charm: The parent charm to attach the observer to.
+            state: The charm state.
         """
         super().__init__(charm, "ssh-debug-observer")
         self.charm = charm
@@ -30,7 +31,7 @@ class Observer(ops.Object):
             self._on_ssh_debug_relation_joined,
         )
 
-    def _on_ssh_debug_relation_joined(self, event: ops.RelationJoinedEvent):
+    def _on_ssh_debug_relation_joined(self, event: ops.RelationJoinedEvent) -> None:
         """Handle ssh-debug relation joined event.
 
         Args:
