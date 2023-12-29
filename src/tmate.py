@@ -148,16 +148,18 @@ def get_fingerprints() -> FingerPrints:
         The generated public key fingerprints.
     """
     if not KEYS_DIR.exists() or not RSA_PUB_KEY_PATH.exists() or not ED25519_PUB_KEY_PATH.exists():
-        raise IncompleteInitError("Missing keys directory.")
+        raise IncompleteInitError("Missing keys path(s).")
     try:
+        # B603:subprocess_without_shell_equals_true false positive
+        # see https://github.com/PyCQA/bandit/issues/333
         rsa_stdout = str(
-            subprocess.check_output(
+            subprocess.check_output(  # nosec
                 ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(RSA_PUB_KEY_PATH)]
             ),
             encoding="utf-8",
         ).split()[1]
         ed25519_stdout = str(
-            subprocess.check_output(
+            subprocess.check_output(  # nosec
                 ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(ED25519_PUB_KEY_PATH)]
             ),
             encoding="utf-8",

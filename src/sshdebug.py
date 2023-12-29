@@ -36,12 +36,19 @@ class Observer(ops.Object):
 
         Args:
             event: The event fired on ssh-debug relation joined.
+
+        Raises:
+            KeyInstallError: if there was an error getting keys fingerprints.
         """
         try:
             fingerprints = tmate.get_fingerprints()
-        except tmate.FingerPrintError as exc:
+        except tmate.KeyInstallError as exc:
             logger.error("Error generating fingerprints, %s.", exc)
-            self.charm.unit.status = ops.BlockedStatus("Error generating fingerprints.")
+            raise
+        except tmate.IncompleteInitError as exc:
+            logger.warning("tmate keys not yet fully initialized, %s", exc)
+            # Tmate installation is not yet complete. Defer until installation is complete.
+            event.defer()
             return
 
         event.relation.data[self.model.unit].update(
