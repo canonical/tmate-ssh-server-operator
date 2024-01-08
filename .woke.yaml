@@ -1,5 +1,5 @@
 rules:
-  # Ignore "slave" - the apt/v0 lib uses this term.
+  # Ignore man-in-the-middle - the apt/v0 lib uses this term.
   - name: man-in-the-middle
   # Ignore whitelist - we are using it to ignore pydantic in pyptoject.toml
   - name: whitelist
