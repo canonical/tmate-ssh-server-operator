@@ -1,0 +1,5 @@
+rules:
+  # Ignore man-in-the-middle - the operator_libs_linux/v0/apt lib uses this term.
+  - name: man-in-the-middle
+  # Ignore whitelist - we are using it to ignore pydantic in pyproject.toml
+  - name: whitelist
