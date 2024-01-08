@@ -1,0 +1,7 @@
+rules:
+  # Ignore "slave" - the apt/v0 lib uses this term.
+  - name: man-in-the-middle
+  # Ignore whitelist - we are using it to ignore pydantic in pyptoject.toml
+  - name: whitelist
+  # Ignore "master" - Keycloak for oidc integration tests uses this terminology.
+  - name: master
