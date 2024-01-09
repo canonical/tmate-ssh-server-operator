@@ -16,6 +16,8 @@ from pytest_operator.plugin import OpsTest
 
 from tmate import PORT
 
+from .helpers import wait_for
+
 logger = logging.getLogger(__name__)
 
 
@@ -67,7 +69,16 @@ async def test_ssh_connection(
     # trust missing host key for testing purposes only.
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec
     logger.info("Connecting to created ssh session, %s %s %s", unit_ip, PORT, token)
-    client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
+
+    def connect_client():
+        """Try connecting to client until successful."""
+        try:
+            client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
+        except paramiko.SSHException as exc:
+            logger.warning("Failed to connect to client, retrying... %s", exc)
+
+    await wait_for(connect_client)
+
     transport = client.get_transport()
     session = transport.open_session()
     session.get_pty()
