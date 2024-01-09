@@ -9,5 +9,4 @@
 # The runner has ~/.ssh dir owned by Docker, change the ownership for ssh access.
 sudo mkdir -p ~/.ssh
 sudo chown -R runner:runner ~/.ssh
-sudo ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa
-ls -la ~/.ssh
+sudo bootstrap localhost
