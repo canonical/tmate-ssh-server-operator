@@ -73,7 +73,4 @@ async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
         "ssh", str(machine.entity_id), "sudo apt install -y tmate"
     )
     assert retcode == 0, f"Failed to run apt install, {stderr}"
-    (retcode, _, stderr) = await ops_test.juju(
-        "ssh", str(machine.entity_id), "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-    )
     return machine

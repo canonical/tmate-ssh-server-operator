@@ -74,18 +74,7 @@ async def test_ssh_connection(
     # trust missing host key for testing purposes only.
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec
     logger.info("Connecting to created ssh session, %s %s %s", unit_ip, PORT, token)
-
-    def connect_client():
-        """Try connecting to client until successful."""
-        try:
-            client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
-        except paramiko.SSHException as exc:
-            logger.warning("Failed to connect to client, retrying... %s", exc)
-            return False
-        return True
-
-    await wait_for(connect_client)
-
+    client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
     transport = client.get_transport()
     session = transport.open_session()
     session.get_pty()
