@@ -9,3 +9,4 @@
 # The runner has ~/.ssh dir owned by Docker, change the ownership for ssh access.
 sudo mkdir -p ~/.ssh
 sudo chown -R runner:runner ~/.ssh
+ls -la ~/.ssh
