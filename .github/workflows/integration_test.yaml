@@ -12,7 +12,7 @@ jobs:
       provider: lxd
       tmate-debug: true
       pre-run-script: |
-        chmod +x tests/integration/pre_run_script.sh
+        -c "chmod +x tests/integration/pre_run_script.sh
         ./tests/integration/pre_run_script.sh"
       # self-hosted-runner: true
       # self-hosted-runner-label: "edge"
