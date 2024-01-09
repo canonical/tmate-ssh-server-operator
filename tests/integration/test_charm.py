@@ -60,7 +60,7 @@ async def test_ssh_connection(
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
 
-    logger.info("Creating ssh session")
+    logger.info("Creating ssh session, ssh connection info output: %s", stdout)
     token = stdout.split(" ")[2].split("@")[0]
     client = paramiko.SSHClient()
     unit_ip = await unit.get_public_address()
