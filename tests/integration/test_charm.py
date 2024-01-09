@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for tmate-ssh-server charm."""
+import asyncio
 import logging
 import os
 import secrets
@@ -43,12 +44,14 @@ async def test_ssh_connection(
     os.remove(config_file.name)
 
     logger.info("Starting tmate session")
-    await ops_test.juju(
+    (retcode, stdout, stderr) = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock new-session -d"
     )
-    await ops_test.juju(
+    assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
+    (retcode, stdout, stderr) = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock wait tmate-ready"
     )
+    assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh",
         tmate_machine.entity_id,
