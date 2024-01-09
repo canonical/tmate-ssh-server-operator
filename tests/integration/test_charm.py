@@ -51,7 +51,12 @@ async def test_ssh_connection(
         "ssh",
         tmate_machine.entity_id,
         "--",
-        "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'",
+        "tmate",
+        "-S",
+        "/tmp/tmate.sock",
+        "display",
+        "-p",
+        "'#{tmate_ssh}'",
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
 
