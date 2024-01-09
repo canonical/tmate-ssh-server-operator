@@ -48,10 +48,12 @@ async def test_ssh_connection(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock new-session -d"
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
+    logger.info("New session created %s %s %s", retcode, stdout, stderr)
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock wait tmate-ready"
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
+    logger.info("Tmate ready %s %s %s", retcode, stdout, stderr)
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh",
         tmate_machine.entity_id,
@@ -64,8 +66,8 @@ async def test_ssh_connection(
         "'#{tmate_ssh}'",
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
+    logger.info("Tmate connection output: %s %s %s", retcode, stdout, stderr)
 
-    logger.info("Creating ssh session, ssh connection info output: %s", stdout)
     token = stdout.split(" ")[2].split("@")[0]
     client = paramiko.SSHClient()
     unit_ip = await unit.get_public_address()
