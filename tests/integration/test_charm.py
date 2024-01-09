@@ -41,12 +41,17 @@ async def test_ssh_connection(
     os.remove(config_file.name)
 
     logger.info("Starting tmate session")
-    await ops_test.juju("ssh", tmate_machine.entity_id, "tmate -S /tmp/tmate.sock new-session -d")
     await ops_test.juju(
-        "ssh", tmate_machine.entity_id, "tmate -S /tmp/tmate.sock wait tmate-ready"
+        "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock new-session -d"
+    )
+    await ops_test.juju(
+        "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock wait tmate-ready"
     )
     (retcode, stdout, stderr) = await ops_test.juju(
-        "ssh", tmate_machine.entity_id, "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
+        "ssh",
+        tmate_machine.entity_id,
+        "--",
+        "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'",
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
 
