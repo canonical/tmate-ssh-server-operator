@@ -1,0 +1,36 @@
+# Copyright 2024 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+name: tmate-ssh-server
+display-name: Tmate-ssh-server
+maintainers:
+  - https://launchpad.net/~canonical-is-devops
+description: |
+  A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
+  deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
+  open source terminal multiplexer, providing instant terminal sharing capabilities.
+
+  Tmate is a terminal multiplexer that allows remote terminal sharing. It enables users to share
+  their terminal session with other users over the internet, allowing them to collaborate, provide
+  technical support, or demonstrate commands and procedures in real-time.
+
+  This charm provides the tmate-ssh-server service, and when paired with the tmate client provides
+  self-hosted ssh relay server.
+
+  For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
+  straightforward through Juju's clean interface. Allowing machine relations to the
+  [Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the running
+  machines.
+docs: https://discourse.charmhub.io/t/tmate-ssh-server-documentation-overview/12886
+issues: https://github.com/canonical/tmate-ssh-server-operator/issues
+source: https://github.com/canonical/tmate-ssh-server-operator
+summary: Tmate SSH Relay Server
+series:
+  - jammy
+tags:
+  - application_development
+  - ops
+
+provides:
+  debug-ssh:
+    interface: debug-ssh

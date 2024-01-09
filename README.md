@@ -4,11 +4,11 @@ A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
 deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
 open source terminal multiplexer, providing instant terminal sharing capabilities.
 
-Tmate is a terminal multiplexer that allows remote terminal sharing. It enables users to share
-their terminal session with other users over the internet, allowing them to collaborate, provide
-technical support, or demonstrate commands and procedures in real-time.
+Tmate enables users to share their terminal session with other users over the internet, allowing
+them to collaborate, provide technical support, or demonstrate commands and procedures in
+real-time.
 
-This charm provides the tmate-ssh-server service, and when paired with the tmate client provides
+This charm provides a tmate-ssh-server service, and when paired with the tmate client provides a
 self-hosted ssh relay server.
 
 For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
@@ -24,7 +24,7 @@ project that warmly welcomes community projects, contributions, suggestions,
 fixes and constructive feedback.
 * [Code of conduct](https://ubuntu.com/community/code-of-conduct)
 * [Get support](https://discourse.charmhub.io/)
-* [Join our online chat](https://chat.charmhub.io/charmhub/channels/charm-dev)
+* [Join our online chat](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
 * [Contribute](https://charmhub.io/tmate-ssh-server/docs/contributing)
 * [Getting Started](https://charmhub.io/tmate-ssh-server/docs/getting-started)
 Thinking about using the tmate-ssh-server Operator for your next project? 
@@ -40,6 +40,6 @@ For further details,
 Run the following command:
 
 ```bash
-echo -e "tox -e src-docs\ngit add src-docs\n" > .git/hooks/pre-commit
+echo -e "tox -e src-docs\ngit add src-docs\n" >> .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
