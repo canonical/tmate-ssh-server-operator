@@ -7,11 +7,12 @@ import typing
 
 import pytest
 import pytest_asyncio
-from helpers import wait_for
 from juju.client._definitions import DetailedStatus, FullStatus, MachineStatus
 from juju.machine import Machine
 from juju.model import Model
 from pytest_operator.plugin import OpsTest
+
+from .helpers import wait_for
 
 logger = logging.getLogger(__name__)
 
