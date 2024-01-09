@@ -76,6 +76,8 @@ async def test_ssh_connection(
             client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
         except paramiko.SSHException as exc:
             logger.warning("Failed to connect to client, retrying... %s", exc)
+            return False
+        return True
 
     await wait_for(connect_client)
 
