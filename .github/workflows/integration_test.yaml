@@ -10,5 +10,6 @@ jobs:
     with:
       juju-channel: 3.1/stable
       provider: lxd
-      self-hosted-runner: true
-      self-hosted-runner-label: "large"
+      tmate-debug: true
+      # self-hosted-runner: true
+      # self-hosted-runner-label: "edge"
