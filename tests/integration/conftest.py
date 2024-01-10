@@ -17,8 +17,8 @@ from .helpers import wait_for
 logger = logging.getLogger(__name__)
 
 
-@pytest.fixture(scope="module")
-def model(ops_test: OpsTest) -> Model:
+@pytest.fixture(scope="module", name="model")
+def model_fixture(ops_test: OpsTest) -> Model:
     """Juju model used in the test."""
     assert ops_test.model is not None
     return ops_test.model

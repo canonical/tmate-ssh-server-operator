@@ -2,13 +2,11 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for tmate-ssh-server charm."""
-import asyncio
 import logging
 import os
 import secrets
 
-# library stubs for paramiko are in a separate python package and does not need to be installed.
-import paramiko  # type: ignore
+import paramiko
 from juju.action import Action
 from juju.application import Application
 from juju.machine import Machine
@@ -58,7 +56,8 @@ async def test_ssh_connection(
         "--",
         "tmate",
         "-S",
-        "/tmp/tmate.sock",
+        # this is the path to tmate socket that is used by tmate.
+        "/tmp/tmate.sock",  # nosec
         "display",
         "-p",
         "'#{tmate_ssh}'",
@@ -74,17 +73,18 @@ async def test_ssh_connection(
     logger.info("Connecting to created ssh session, %s %s %s", unit_ip, PORT, token)
     client.connect(unit_ip, PORT, token, "", compress=True, allow_agent=False)
     transport = client.get_transport()
+    assert transport, "Transport wasn't initialized."
     session = transport.open_session()
     session.get_pty()
     session.invoke_shell()
     stdout = session.recv(10000)
-    logger.info("Shell stdout: %s", stdout)
-    session.send("q\n")
+    logger.info("Shell stdout: %s", str(stdout))
+    session.send(bytes("q\n", encoding="utf-8"))
     stdout = session.recv(10000)
-    logger.info("Shell stdout: %s", stdout)
-    session.send("echo test > ~/test.txt && cat ~/test.txt\n")
+    logger.info("Shell stdout: %s", str(stdout))
+    session.send(bytes("echo test > ~/test.txt && cat ~/test.txt\n", encoding="utf-8"))
     stdout = session.recv(10000)
-    logger.info("Shell stdout: %s", stdout)
+    logger.info("Shell stdout: %s", str(stdout))
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "cat ~/test.txt"
     )
