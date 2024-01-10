@@ -10,7 +10,11 @@ import pytest
 
 import tmate
 from charm import TmateSSHServerOperatorCharm
-from state import State
+
+from .factories import StateFactory
+
+# Need access to protected functions for testing
+# pylint: disable=protected-access
 
 
 def test__on_ssh_debug_relation_joined_fail(
@@ -53,28 +57,18 @@ def test__on_ssh_debug_relation_joined_defer(
     mock_event.defer.assert_called_once()
 
 
+@pytest.mark.usefixtures("patch_get_fingerprints")
 def test__on_ssh_debug_relation_joined(
     monkeypatch: pytest.MonkeyPatch,
     charm: TmateSSHServerOperatorCharm,
+    fingerprints: tmate.Fingerprints,
 ):
     """
     arrange: given a monkeypatched get_fingerprints returning fingerprint data and state.
     act: when _on_ssh_debug_relation_joined is called.
     assert: the relation data is updatedd.
     """
-    monkeypatch.setattr(
-        tmate,
-        "get_fingerprints",
-        MagicMock(
-            spec=tmate.get_fingerprints,
-            return_value=tmate.Fingerprints(
-                rsa=(rsa_fingerprint := "rsa_fingerprint"),
-                ed25519=(ed25519_fingerprint := "ed25519_fingerprint"),
-            ),
-        ),
-    )
-    mock_state = MagicMock(spec=State)
-    mock_state.ip_addr = (ip_addr := "127.0.0.1")
+    mock_state = StateFactory()
     monkeypatch.setattr(charm.sshdebug, "state", mock_state)
 
     mock_event = MagicMock(spec=ops.RelationJoinedEvent)
@@ -84,9 +78,9 @@ def test__on_ssh_debug_relation_joined(
 
     mock_event.relation.data[charm.model.unit].update.assert_called_once_with(
         {
-            "host": ip_addr,
+            "host": mock_state.ip_addr,
             "port": str(tmate.PORT),
-            "rsa_fingerprint": rsa_fingerprint,
-            "ed25519_fingerprint": ed25519_fingerprint,
+            "rsa_fingerprint": fingerprints.rsa,
+            "ed25519_fingerprint": fingerprints.ed25519,
         }
     )

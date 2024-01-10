@@ -191,23 +191,13 @@ def test_generate_tmate_conf_error(monkeypatch: pytest.MonkeyPatch, exception: t
         tmate.generate_tmate_conf(MagicMock())
 
 
-def test_generate_tmate_conf(monkeypatch: pytest.MonkeyPatch):
+@pytest.mark.usefixtures("patch_get_fingerprints")
+def test_generate_tmate_conf(fingerprints: tmate.Fingerprints):
     """
     arrange: given a monkeypatched get_fingerprints that returns mock fingerprint data.
     act: when generate_tmate_conf is called.
     assert: a tmate.conf file contents are generated.
     """
-    monkeypatch.setattr(
-        tmate,
-        "get_fingerprints",
-        MagicMock(
-            spec=tmate.get_fingerprints,
-            return_value=tmate.Fingerprints(
-                rsa=(rsa_fingerprint := "rsa_fingerprint"),
-                ed25519=(ed25519_fingerprint := "ed25519_fingerprint"),
-            ),
-        ),
-    )
     host = "test_host_value"
 
     assert (
@@ -215,8 +205,8 @@ def test_generate_tmate_conf(monkeypatch: pytest.MonkeyPatch):
             f"""
         set -g tmate-server-host {host}
         set -g tmate-server-port {tmate.PORT}
-        set -g tmate-server-rsa-fingerprint {rsa_fingerprint}
-        set -g tmate-server-ed25519-fingerprint {ed25519_fingerprint}
+        set -g tmate-server-rsa-fingerprint {fingerprints.rsa}
+        set -g tmate-server-ed25519-fingerprint {fingerprints.ed25519}
         """
         )
         == tmate.generate_tmate_conf(host)

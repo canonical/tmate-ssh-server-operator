@@ -12,6 +12,9 @@ import tmate
 from charm import TmateSSHServerOperatorCharm
 from state import State
 
+# Need access to protected functions for testing
+# pylint: disable=protected-access
+
 
 def test__on_install_dependencies_error(
     monkeypatch: pytest.MonkeyPatch,

@@ -10,7 +10,8 @@ import pytest
 
 import tmate
 from charm import TmateSSHServerOperatorCharm
-from state import State
+
+from .factories import StateFactory
 
 
 def test_on_get_server_config_fail(
@@ -22,8 +23,7 @@ def test_on_get_server_config_fail(
     act: when on_get_server_config is called.
     assert: the event is failed.
     """
-    mock_state = MagicMock(spec=State)
-    mock_state.ip_addr = None
+    mock_state = StateFactory(ip_addr=None)
     monkeypatch.setattr(charm.actions, "state", mock_state)
 
     mock_event = MagicMock(spec=ops.ActionEvent)
