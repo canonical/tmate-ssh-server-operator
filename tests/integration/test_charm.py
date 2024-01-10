@@ -3,8 +3,8 @@
 
 """Integration tests for tmate-ssh-server charm."""
 import logging
-import os
 import secrets
+from pathlib import Path
 
 import paramiko
 from juju.action import Action
@@ -31,13 +31,13 @@ async def test_ssh_connection(
     await action.wait()
     config = action.results["tmate-config"]
 
-    with open(secrets.token_hex(8), mode="x", encoding="utf-8") as config_file:
-        config_file.write(config)
+    temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
+    temp_config_file_path.write_text(config, encoding="utf-8")
     (retcode, stdout, stderr) = await ops_test.juju(
-        "scp", config_file.name, f"{tmate_machine.entity_id}:~/.tmate.conf"
+        "scp", temp_config_file_path.name, f"{tmate_machine.entity_id}:~/.tmate.conf"
     )
     assert retcode == 0, f"Failed to scp tmate conf file {stdout} {stderr}"
-    os.remove(config_file.name)
+    temp_config_file_path.unlink()
 
     logger.info("Starting tmate session")
     (retcode, stdout, stderr) = await ops_test.juju(
@@ -79,10 +79,11 @@ async def test_ssh_connection(
     session.invoke_shell()
     stdout = session.recv(10000)
     logger.info("Shell stdout: %s", str(stdout))
-    session.send(bytes("q\n", encoding="utf-8"))
+    # The send expects bytes type but the docstrings want str type (bytes type doesn't work).
+    session.send("q\n")  # type: ignore
     stdout = session.recv(10000)
     logger.info("Shell stdout: %s", str(stdout))
-    session.send(bytes("echo test > ~/test.txt && cat ~/test.txt\n", encoding="utf-8"))
+    session.send("echo test > ~/test.txt && cat ~/test.txt\n")  # type: ignore
     stdout = session.recv(10000)
     logger.info("Shell stdout: %s", str(stdout))
     (retcode, stdout, stderr) = await ops_test.juju(
