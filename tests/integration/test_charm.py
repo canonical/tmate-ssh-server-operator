@@ -72,7 +72,7 @@ async def test_ssh_connection(
     # trust missing host key for testing purposes only.
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  # nosec
     logger.info("Connecting to created ssh session, %s %s %s", unit_ip, PORT, token)
-    client.connect(unit_ip, PORT, token, compress=True, allow_agent=False)
+    client.connect(unit_ip, PORT, token, "", compress=True, allow_agent=False)
     transport = client.get_transport()
     session = transport.open_session()
     session.get_pty()
