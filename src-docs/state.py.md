@@ -12,6 +12,40 @@ tmate-ssh-server states.
 
 ---
 
+## <kbd>class</kbd> `CharmStateBaseError`
+Represents an error with charm state. 
+
+
+
+
+
+---
+
+## <kbd>class</kbd> `InvalidCharmStateError`
+Represents an invalid charm state. 
+
+<a href="../src/state.py#L21"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+### <kbd>function</kbd> `__init__`
+
+```python
+__init__(reason: str)
+```
+
+Initialize the error. 
+
+
+
+**Args:**
+ 
+ - <b>`reason`</b>:  The reason why the state is invalid. 
+
+
+
+
+
+---
+
 ## <kbd>class</kbd> `State`
 The tmate-ssh-server operator charm state. 
 
@@ -26,7 +60,7 @@ The tmate-ssh-server operator charm state.
 
 ---
 
-<a href="../src/state.py#L24"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/state.py#L40"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>classmethod</kbd> `from_charm`
 
@@ -46,5 +80,11 @@ Initialize the state from charm.
 
 **Returns:**
  The current state of tmate-ssh-server charm. 
+
+
+
+**Raises:**
+ 
+ - <b>`InvalidCharmStateError`</b>:  if the network bind address was not of IPv4/IPv6. 
 
 
