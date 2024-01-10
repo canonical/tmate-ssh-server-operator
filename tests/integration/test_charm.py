@@ -17,20 +17,17 @@ from pytest_operator.plugin import OpsTest
 
 from tmate import PORT
 
-from .helpers import wait_for
-
 logger = logging.getLogger(__name__)
 
 
 async def test_ssh_connection(
-    # ops_test: OpsTest, tmate_ssh_server: Application, tmate_machine: Machine
+    ops_test: OpsTest, tmate_ssh_server: Application, tmate_machine: Machine
 ):
     """
     arrange: given a related github-runner charm and a tmate-ssh-server charm.
     act: when ssh connection is requested.
     assert: the connection is made successfully.
     """
-    assert False, "Testing"
     unit: Unit = next(iter(tmate_ssh_server.units))
     action: Action = await unit.run_action("get-server-config")
     await action.wait()
