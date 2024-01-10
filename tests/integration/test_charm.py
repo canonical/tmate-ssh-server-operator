@@ -29,7 +29,9 @@ async def test_ssh_connection(
     unit: Unit = next(iter(tmate_ssh_server.units))
     action: Action = await unit.run_action("get-server-config")
     await action.wait()
-    assert action.status == "success", f"Get server-config action failed, status: {action.status}"
+    assert (
+        action.status == "completed"
+    ), f"Get server-config action failed, status: {action.status}"
     config = action.results["tmate-config"]
 
     temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
