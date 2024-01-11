@@ -49,6 +49,4 @@ parts:
       craftctl default  
       /bin/bash -c "mkdir -p --mode=775 srv/tmate-ssh-server/"
       cp ${CRAFT_PART_BUILD}/tmate-ssh-server/tmate-ssh-server srv/tmate-ssh-server/
-      cp ${CRAFT_PART_BUILD}/tmate-ssh-server/create_keys.sh srv/tmate-ssh-server/
-      cp -r ${CRAFT_PART_BUILD}/tmate-ssh-server/keys srv/tmate-ssh-server/
       /bin/bash -c "chown -R 584792:584792 srv/tmate-ssh-server/"
