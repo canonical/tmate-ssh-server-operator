@@ -7,8 +7,6 @@ import secrets
 from pathlib import Path
 
 import paramiko
-from juju.action import Action
-from juju.application import Application
 from juju.machine import Machine
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
@@ -19,36 +17,26 @@ logger = logging.getLogger(__name__)
 
 
 async def test_ssh_connection(
-    ops_test: OpsTest, tmate_ssh_server: Application, tmate_machine: Machine
+    ops_test: OpsTest, tmate_config: str, pub_key: str, tmate_machine: Machine, unit: Unit
 ):
     """
     arrange: given a related github-runner charm and a tmate-ssh-server charm.
     act: when ssh connection is requested.
     assert: the connection is made successfully.
     """
-    unit: Unit = next(iter(tmate_ssh_server.units))
-    action: Action = await unit.run_action("get-server-config")
-    await action.wait()
-    assert (
-        action.status == "completed"
-    ), f"Get server-config action failed, status: {action.status}"
-    config = action.results["tmate-config"]
-
     temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
-    temp_config_file_path.write_text(config, encoding="utf-8")
+    temp_config_file_path.write_text(tmate_config, encoding="utf-8")
     (retcode, stdout, stderr) = await ops_test.juju(
         "scp", temp_config_file_path.name, f"{tmate_machine.entity_id}:~/.tmate.conf"
     )
     assert retcode == 0, f"Failed to scp tmate conf file {stdout} {stderr}"
     temp_config_file_path.unlink()
 
-    pub_key_path = Path(Path.home() / ".ssh/id_rsa.pub")
-    pub_key_contents = pub_key_path.read_text(encoding="utf-8")
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh",
         tmate_machine.entity_id,
         "--",
-        f"echo '{pub_key_contents}' >> ~/.ssh/authorized_keys",
+        f"echo '{pub_key}' >> ~/.ssh/authorized_keys",
     )
     logger.info("Added pub key to authorized_keys, %s %s %s", retcode, stdout, stderr)
 
