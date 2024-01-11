@@ -42,9 +42,22 @@ async def test_ssh_connection(
     assert retcode == 0, f"Failed to scp tmate conf file {stdout} {stderr}"
     temp_config_file_path.unlink()
 
+    pub_key_path = Path(Path.home() / ".ssh/id_rsa.pub")
+    pub_key_contents = pub_key_path.read_text(encoding="utf-8")
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "ssh",
+        tmate_machine.entity_id,
+        "--",
+        f"echo '{pub_key_contents}' >> ~/.ssh/authorized_keys",
+    )
+    logger.info("Added pub key to authorized_keys, %s %s %s", retcode, stdout, stderr)
+
     logger.info("Starting tmate session")
     (retcode, stdout, stderr) = await ops_test.juju(
-        "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock new-session -d"
+        "ssh",
+        tmate_machine.entity_id,
+        "--",
+        "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session -d",
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
     logger.info("New session created %s %s %s", retcode, stdout, stderr)

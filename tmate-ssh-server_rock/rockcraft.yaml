@@ -15,7 +15,7 @@ services:
   tmate-ssh-server:
     override: merge
     summary: The tmate-ssh-server.
-    command: ./tmate-ssh-server -p 10022 -h 0.0.0.0
+    command: ./tmate-ssh-server -A -p 10022 -h 0.0.0.0 -k /keys
     working-dir: /srv/tmate-ssh-server/
     startup: enabled
 environment:
@@ -46,7 +46,7 @@ parts:
       git clone https://github.com/tmate-io/tmate-ssh-server.git && cd tmate-ssh-server
       ./autogen.sh && ./configure && make
     override-prime: |
-      craftctl default  
+      craftctl default
       /bin/bash -c "mkdir -p --mode=775 srv/tmate-ssh-server/"
       cp ${CRAFT_PART_BUILD}/tmate-ssh-server/tmate-ssh-server srv/tmate-ssh-server/
       /bin/bash -c "chown -R 584792:584792 srv/tmate-ssh-server/"

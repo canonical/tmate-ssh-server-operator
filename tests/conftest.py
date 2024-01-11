@@ -14,3 +14,5 @@ def pytest_addoption(parser: pytest.Parser):
     """
     # The prebuilt charm file.
     parser.addoption("--charm-file", action="store", default="")
+    # Allow tmate-ssh-server-image input argument to be passed on by operator-workflows.
+    parser.addoption("--tmate-ssh-server-image", action="store", default="")
