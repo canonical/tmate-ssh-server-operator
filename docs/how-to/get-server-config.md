@@ -12,7 +12,7 @@ juju run tmate-ssh-server/0 get-server-config
 The output should look something similar to the contents below:
 
 ```
-unning operation 1 with 1 task
+Running operation 1 with 1 task
   - task 1 on unit-tmate-ssh-server-0
 
 Waiting for task 1...

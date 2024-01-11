@@ -55,7 +55,7 @@ set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 
 ### Create a tmate client machine
 
-To immitate a tmate client, we can add a machine on Juju and install tmate.
+To imitate a tmate client, we can add a machine on Juju and install tmate.
 
 ```
 $ juju add-machine
