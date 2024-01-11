@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 name: tmate-ssh-server
@@ -44,7 +44,6 @@ parts:
       - openssh-client
     override-build: |
       git clone https://github.com/tmate-io/tmate-ssh-server.git && cd tmate-ssh-server
-      ./create_keys.sh
       ./autogen.sh && ./configure && make
     override-prime: |
       craftctl default  
