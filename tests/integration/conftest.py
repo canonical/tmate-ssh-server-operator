@@ -99,8 +99,10 @@ async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
     (retcode, _, stderr) = await ops_test.juju("ssh", str(machine.entity_id), "sudo apt update -y")
     assert retcode == 0, f"Failed to run apt update, {stderr}"
     logger.info("Installing tmate.")
-    (retcode, _, stderr) = await ops_test.juju(
-        "ssh", str(machine.entity_id), "DEBIAN_FRONTEND=noninteractive sudo apt-get install tmate"
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "ssh",
+        str(machine.entity_id),
+        "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y tmate",
     )
-    assert retcode == 0, f"Failed to run apt install, {stderr}"
+    assert retcode == 0, f"Failed to run apt install, {stdout} {stderr}"
     return machine
