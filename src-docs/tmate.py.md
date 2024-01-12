@@ -34,7 +34,7 @@ Install dependenciese required to start tmate-ssh-server container.
 
 ---
 
-<a href="../src/tmate.py#L77"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L78"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `install_keys`
 
@@ -59,7 +59,7 @@ Install key creation script and generate keys.
 
 ---
 
-<a href="../src/tmate.py#L102"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L103"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `start_daemon`
 
@@ -84,7 +84,7 @@ Install unit files and start daemon.
 
 ---
 
-<a href="../src/tmate.py#L156"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L157"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `get_fingerprints`
 
@@ -108,7 +108,7 @@ Get fingerprint from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L180"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L181"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `generate_tmate_conf`
 

@@ -68,6 +68,7 @@ def install_dependencies() -> None:
         apt.add_package(APT_DEPENDENCIES)
     except (apt.PackageNotFoundError, apt.PackageError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
+    passwd.add_group("docker")
     try:
         passwd.add_user_to_group(USER, "docker")
     except ValueError as exc:
@@ -174,7 +175,7 @@ def get_fingerprints() -> Fingerprints:
     ed25519_key_b64 = ed25519_pub_key.split()[1]
     ed25519_fingerprint = _calculate_fingerprint(ed25519_key_b64)
 
-    return Fingerprints(rsa=rsa_fingerprint, ed25519=ed25519_fingerprint)
+    return Fingerprints(rsa=f"SHA256:{rsa_fingerprint}", ed25519=f"SHA256:{ed25519_fingerprint}")
 
 
 def generate_tmate_conf(host: str) -> str:

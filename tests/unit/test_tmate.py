@@ -48,6 +48,7 @@ def test_install_dependencies_add_user_to_group_error(monkeypatch: pytest.Monkey
     """
     monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
     monkeypatch.setattr(tmate.apt, "add_package", MagicMock(spec=apt.add_package))
+    monkeypatch.setattr(tmate.passwd, "add_group", MagicMock(spec=tmate.passwd.add_group))
     monkeypatch.setattr(tmate.passwd, "add_user_to_group", MagicMock(side_effect=[ValueError]))
 
     with pytest.raises(tmate.DependencySetupError):
@@ -200,7 +201,9 @@ def test_get_fingerprints(monkeypatch: pytest.MonkeyPatch):
     )
 
     assert (
-        tmate.Fingerprints(rsa=rsa_fingerprint, ed25519=ed25519_fingerprint)
+        tmate.Fingerprints(
+            rsa=f"SHA256:{rsa_fingerprint}", ed25519=f"SHA256:{ed25519_fingerprint}"
+        )
         == tmate.get_fingerprints()
     )
 

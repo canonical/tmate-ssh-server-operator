@@ -4,12 +4,17 @@
 """Fixtures for tmate-ssh-server charm integration tests."""
 import logging
 import typing
+from pathlib import Path
 
+import paramiko
 import pytest
 import pytest_asyncio
+from juju.action import Action
+from juju.application import Application
 from juju.client._definitions import DetailedStatus, FullStatus, MachineStatus
 from juju.machine import Machine
 from juju.model import Model
+from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
 from .helpers import wait_for
@@ -44,6 +49,32 @@ async def tmate_ssh_server_fixture(model: Model, charm: str):
     return app
 
 
+@pytest.fixture(scope="module", name="unit")
+def unit_fixture(tmate_ssh_server: Application):
+    """The tmate-ssh-server unit."""
+    unit: Unit = next(iter(tmate_ssh_server.units))
+    return unit
+
+
+@pytest_asyncio.fixture(scope="module", name="tmate_config")
+async def tmate_config_fixture(unit: Unit):
+    """The .tmate.conf contents."""
+    action: Action = await unit.run_action("get-server-config")
+    await action.wait()
+    assert (
+        action.status == "completed"
+    ), f"Get server-config action failed, status: {action.status}"
+    config = action.results["tmate-config"]
+    return config
+
+
+@pytest.fixture(scope="module", name="pub_key")
+def pub_key_fixture():
+    """The id_rsa public key fixture to use for ssh authorization."""
+    pub_key_path = Path(Path.home() / ".ssh/id_rsa.pub")
+    return pub_key_path.read_text(encoding="utf-8")
+
+
 @pytest_asyncio.fixture(scope="module", name="tmate_machine")
 async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
     """A machine to test tmate ssh connection."""
@@ -70,7 +101,7 @@ async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
     assert retcode == 0, f"Failed to run apt update, {stderr}"
     logger.info("Installing tmate.")
     (retcode, _, stderr) = await ops_test.juju(
-        "ssh", str(machine.entity_id), "sudo apt install -y tmate"
+        "ssh", str(machine.entity_id), "DEBIAN_FRONTEND=noninteractive sudo apt-get install tmate"
     )
     assert retcode == 0, f"Failed to run apt install, {stderr}"
     return machine

@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 User=ubuntu
-Group=ubuntu
+Group=docker
 WorkingDirectory={{ WORKDIR }}
 # run as root to allow reading from /keys dir
 ExecStart=docker run --user root \
