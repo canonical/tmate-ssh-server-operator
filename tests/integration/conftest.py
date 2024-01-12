@@ -6,7 +6,6 @@ import logging
 import typing
 from pathlib import Path
 
-import paramiko
 import pytest
 import pytest_asyncio
 from juju.action import Action
