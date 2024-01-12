@@ -1,8 +1,8 @@
 <!-- markdownlint-disable -->
 
-<a href="../src/sshdebug.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/ssh_debug.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-# <kbd>module</kbd> `sshdebug.py`
+# <kbd>module</kbd> `ssh_debug.py`
 Observer module for ssh-debug integration. 
 
 **Global Variables**
@@ -15,7 +15,7 @@ Observer module for ssh-debug integration.
 ## <kbd>class</kbd> `Observer`
 The ssh-debug integration observer. 
 
-<a href="../src/sshdebug.py#L18"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/ssh_debug.py#L18"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ### <kbd>function</kbd> `__init__`
 

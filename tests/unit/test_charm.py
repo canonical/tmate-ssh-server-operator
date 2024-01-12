@@ -26,11 +26,11 @@ def test__on_install_dependencies_error(
     assert: exceptions are re-raised.
     """
     mock_install_deps = MagicMock(
-        spec=tmate.install_dependencies, side_effect=[tmate.DependencyInstallError]
+        spec=tmate.install_dependencies, side_effect=[tmate.DependencySetupError]
     )
     monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
 
-    with pytest.raises(tmate.DependencyInstallError):
+    with pytest.raises(tmate.DependencySetupError):
         charm._on_install(MagicMock(spec=ops.InstallEvent))
 
 

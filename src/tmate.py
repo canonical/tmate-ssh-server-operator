@@ -3,7 +3,9 @@
 
 """Configurations and functions to operate tmate-ssh-server."""
 
+import base64
 import dataclasses
+import hashlib
 import ipaddress
 
 # subprocess module is required to install and start docker daemon processes, the security
@@ -14,22 +16,10 @@ import typing
 from pathlib import Path
 
 import jinja2
-from charms.operator_libs_linux.v0 import apt
+from charms.operator_libs_linux.v0 import apt, passwd
+from charms.operator_libs_linux.v1 import systemd
 
-APT_DEPENDENCIES = [
-    "git-core",
-    "build-essential",
-    "pkg-config",
-    "libtool",
-    "libevent-dev",
-    "libncurses-dev",
-    "zlib1g-dev",
-    "automake",
-    "libssh-dev",
-    "cmake",
-    "ruby",
-    "libmsgpack-dev",
-]
+APT_DEPENDENCIES = ["docker.io", "openssh-client"]
 
 GIT_REPOSITORY_URL = "https://github.com/tmate-io/tmate-ssh-server.git"
 
@@ -40,11 +30,14 @@ RSA_PUB_KEY_PATH = KEYS_DIR / "ssh_host_rsa_key.pub"
 ED25519_PUB_KEY_PATH = KEYS_DIR / "ssh_host_ed25519_key.pub"
 TMATE_SSH_SERVER_SERVICE_PATH = Path("/etc/systemd/system/tmate-ssh-server.service")
 
+USER = "ubuntu"
+GROUP = "ubuntu"
+
 PORT = 10022
 
 
-class DependencyInstallError(Exception):
-    """Represents an error while installing dependencies."""
+class DependencySetupError(Exception):
+    """Represents an error while installing and setting up dependencies."""
 
 
 class KeyInstallError(Exception):
@@ -67,14 +60,18 @@ def install_dependencies() -> None:
     """Install dependenciese required to start tmate-ssh-server container.
 
     Raises:
-        DependencyInstallError: if there was something wrong installing the apt package
+        DependencySetupError: if there was something wrong installing the apt package
             dependencies.
     """
     try:
         apt.update()
-        apt.add_package(["docker.io", "openssh-client"])
+        apt.add_package(APT_DEPENDENCIES)
     except (apt.PackageNotFoundError, apt.PackageError) as exc:
-        raise DependencyInstallError from exc
+        raise DependencySetupError("Failed to install apt packages.") from exc
+    try:
+        passwd.add_user_to_group(USER, "docker")
+    except ValueError as exc:
+        raise DependencySetupError(f"Failed to add user {USER} to docker group.") from exc
 
 
 def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:
@@ -95,15 +92,18 @@ def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Addr
     try:
         # B603:subprocess_without_shell_equals_true false positive
         # see https://github.com/PyCQA/bandit/issues/333
-        subprocess.check_call(["/usr/bin/chown", "-R", "ubuntu:ubuntu", str(WORK_DIR)])  # nosec
+        subprocess.check_call(["/usr/bin/chown", "-R", f"{USER}:{GROUP}", str(WORK_DIR)])  # nosec
         CREATE_KEYS_SCRIPT_PATH.chmod(755)
-        subprocess.check_call(["/usr/bin/sudo", str(CREATE_KEYS_SCRIPT_PATH)])  # nosec
+        subprocess.check_call([str(CREATE_KEYS_SCRIPT_PATH)])  # nosec
     except subprocess.CalledProcessError as exc:
         raise KeyInstallError from exc
 
 
-def start_daemon() -> None:
+def start_daemon(address: str) -> None:
     """Install unit files and start daemon.
+
+    Args:
+        address: The IP address to bind to.
 
     Raises:
         DaemonStartError: if there was an error starting the tmate-ssh-server docker process.
@@ -113,16 +113,17 @@ def start_daemon() -> None:
         WORKDIR=WORK_DIR,
         KEYS_DIR=KEYS_DIR,
         PORT=PORT,
+        ADDRESS=address,
     )
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
-        # B603:subprocess_without_shell_equals_true false positive
-        # see https://github.com/PyCQA/bandit/issues/333
-        subprocess.check_call(["/usr/bin/systemctl", "daemon-reload"])  # nosec
-        subprocess.check_call(["/usr/bin/systemctl", "restart", "tmate-ssh-server"])  # nosec
-        subprocess.check_call(["/usr/bin/systemctl", "enable", "tmate-ssh-server"])  # nosec
-    except subprocess.CalledProcessError as exc:
-        raise DaemonStartError from exc
+        systemd.daemon_reload()
+    except systemd.SystemdError as exc:
+        raise DaemonStartError("Failed to reload tmate-ssh-server daemon") from exc
+    try:
+        systemd.service_start("tmate-ssh-server")
+    except systemd.SystemdError as exc:
+        raise DaemonStartError("Failed to start tmate-ssh-server daemon") from exc
 
 
 @dataclasses.dataclass
@@ -138,37 +139,42 @@ class Fingerprints:
     ed25519: str
 
 
+def _calculate_fingerprint(key: str) -> str:
+    """Calculate the SHA256 fingerprint of a key.
+
+    Args:
+        key: Base64 encoded key value.
+
+    Returns:
+        Fingerprint of a key.
+    """
+    decoded_bytes = base64.b64decode(key)
+    key_hash = hashlib.sha256(decoded_bytes).digest()
+    return base64.b64encode(key_hash).decode("utf-8").removesuffix("=")
+
+
 def get_fingerprints() -> Fingerprints:
     """Get fingerprint from generated keys.
 
     Raises:
         IncompleteInitError: if the keys have not been generated by the create_keys.sh script.
-        KeyInstallError: if there was something wrong generating fingerprints from public keys.
 
     Returns:
         The generated public key fingerprints.
     """
     if not KEYS_DIR.exists() or not RSA_PUB_KEY_PATH.exists() or not ED25519_PUB_KEY_PATH.exists():
         raise IncompleteInitError("Missing keys path(s).")
-    try:
-        # B603:subprocess_without_shell_equals_true false positive
-        # see https://github.com/PyCQA/bandit/issues/333
-        rsa_stdout = str(
-            subprocess.check_output(  # nosec
-                ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(RSA_PUB_KEY_PATH)]
-            ),  # the output consists of <bit-len> SHA256:<fingerprint> <user-hostname> <algorithm>
-            encoding="utf-8",
-        ).split()[1]
-        ed25519_stdout = str(
-            subprocess.check_output(  # nosec
-                ["/usr/bin/ssh-keygen", "-l", "-E", "SHA256", "-f", str(ED25519_PUB_KEY_PATH)]
-            ),  # the output consists of <bit-len> SHA256:<fingerprint> <user-hostname> <algorithm>
-            encoding="utf-8",
-        ).split()[1]
-    except subprocess.CalledProcessError as exc:
-        raise KeyInstallError("Unable to get pub key fingerprints.") from exc
 
-    return Fingerprints(rsa=rsa_stdout, ed25519=ed25519_stdout)
+    # format of a public key is: ssh-rsa <b64-encoded-key> <user>
+    rsa_pub_key = RSA_PUB_KEY_PATH.read_text(encoding="utf-8")
+    rsa_key_b64 = rsa_pub_key.split()[1]
+    rsa_fingerprint = _calculate_fingerprint(rsa_key_b64)
+
+    ed25519_pub_key = ED25519_PUB_KEY_PATH.read_text(encoding="utf-8")
+    ed25519_key_b64 = ed25519_pub_key.split()[1]
+    ed25519_fingerprint = _calculate_fingerprint(ed25519_key_b64)
+
+    return Fingerprints(rsa=rsa_fingerprint, ed25519=ed25519_fingerprint)
 
 
 def generate_tmate_conf(host: str) -> str:
