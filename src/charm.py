@@ -72,6 +72,13 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
 
+        try:
+            fingerprints = tmate.get_fingerprints()
+        except tmate.IncompleteInitError as exc:
+            logger.error("Something went wrong initializing keys, %s.", exc)
+            raise
+
+        self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
         self.unit.status = ops.ActiveStatus()
 
 

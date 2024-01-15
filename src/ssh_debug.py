@@ -3,6 +3,7 @@
 
 """Observer module for ssh-debug integration."""
 import logging
+import typing
 
 import ops
 
@@ -31,31 +32,43 @@ class Observer(ops.Object):
             self._on_ssh_debug_relation_joined,
         )
 
-    def _on_ssh_debug_relation_joined(self, event: ops.RelationJoinedEvent) -> None:
-        """Handle ssh-debug relation joined event.
+    def update_relation_data(self, host: str, fingerprints: tmate.Fingerprints) -> None:
+        """Update ssh_debug relation data if relation is available.
 
         Args:
-            event: The event fired on ssh-debug relation joined.
+            host: The unit's bound IP address.
+            fingerprints: The tmate-ssh-server generated fingerprint for RSA and ED25519 keys.
+        """
+        relations: typing.List[ops.Relation] | None = self.charm.model.relations.get(
+            DEBUG_SSH_INTEGRATION_NAME
+        )
+        if not relations:
+            logger.warning(
+                "%s relation not yet ready. Relation data will be setup when it becomes available.",
+                DEBUG_SSH_INTEGRATION_NAME,
+            )
+            return
+        for relation in relations:
+            relation_data: ops.RelationDataContent = relation.data[self.charm.unit]
+            relation_data.update(
+                {
+                    "host": host,
+                    "port": str(tmate.PORT),
+                    "rsa_fingerprint": fingerprints.rsa,
+                    "ed25519_fingerprint": fingerprints.ed25519,
+                }
+            )
+
+    def _on_ssh_debug_relation_joined(self, _: ops.RelationJoinedEvent) -> None:
+        """Handle ssh-debug relation joined event.
 
         Raises:
             KeyInstallError: if there was an error getting keys fingerprints.
         """
         try:
             fingerprints = tmate.get_fingerprints()
-        except tmate.KeyInstallError as exc:
-            logger.error("Error generating fingerprints, %s.", exc)
-            raise
         except tmate.IncompleteInitError as exc:
-            logger.warning("tmate keys not yet fully initialized, %s", exc)
-            # Tmate installation is not yet complete. Defer until installation is complete.
-            event.defer()
-            return
+            logger.error("Error getting fingerprint data, %s.", exc)
+            raise
 
-        event.relation.data[self.model.unit].update(
-            {
-                "host": str(self.state.ip_addr),
-                "port": str(tmate.PORT),
-                "rsa_fingerprint": fingerprints.rsa,
-                "ed25519_fingerprint": fingerprints.ed25519,
-            }
-        )
+        self.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
