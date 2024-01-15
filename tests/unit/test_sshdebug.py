@@ -7,9 +7,11 @@ from unittest.mock import MagicMock
 
 import ops
 import pytest
+from ops.testing import Harness
 
 import tmate
 from charm import TmateSSHServerOperatorCharm
+from ssh_debug import DEBUG_SSH_INTEGRATION_NAME
 
 from .factories import StateFactory
 
@@ -17,33 +19,45 @@ from .factories import StateFactory
 # pylint: disable=protected-access
 
 
-def test__on_ssh_debug_relation_joined_fail(
+def test_update_relation_data_no_relations(
     monkeypatch: pytest.MonkeyPatch,
-    charm: TmateSSHServerOperatorCharm,
+    harness: Harness,
+    fingerprints: tmate.Fingerprints,
 ):
     """
-    arrange: given a monkeypatched tmate.get_fingerprints that raises a KeyInstallError.
-    act: when _on_ssh_debug_relation_joined is called.
-    assert: the exception is reraised.
+    arrange: given debug_ssh integration.
+    act: when update_relation_data is called.
+    assert: relation data is correctly updated.
     """
     monkeypatch.setattr(
         tmate,
         "get_fingerprints",
-        MagicMock(spec=tmate.get_fingerprints, side_effect=[tmate.KeyInstallError]),
+        MagicMock(spec=tmate.get_fingerprints, return_value=fingerprints),
     )
+    relation_id = harness.add_relation(DEBUG_SSH_INTEGRATION_NAME, "github_runner")
+    harness.add_relation_unit(relation_id, "github_runner/0")
+    harness.begin()
 
-    with pytest.raises(tmate.KeyInstallError):
-        charm.sshdebug._on_ssh_debug_relation_joined(MagicMock(spec=ops.RelationJoinedEvent))
+    charm: TmateSSHServerOperatorCharm = harness.charm
+    charm.sshdebug.update_relation_data("host", fingerprints)
+
+    relation_data = harness.get_relation_data(relation_id, charm.unit)
+    assert relation_data == {
+        "host": "host",
+        "port": str(tmate.PORT),
+        "rsa_fingerprint": fingerprints.rsa,
+        "ed25519_fingerprint": fingerprints.ed25519,
+    }
 
 
-def test__on_ssh_debug_relation_joined_defer(
+def test__on_ssh_debug_relation_joined_error(
     monkeypatch: pytest.MonkeyPatch,
     charm: TmateSSHServerOperatorCharm,
 ):
     """
     arrange: given a monkeypatched tmate.get_fingerprints that raises a IncompleteInitError.
     act: when _on_ssh_debug_relation_joined is called.
-    assert: the event is deferred.
+    assert: the charm raises an error.
     """
     monkeypatch.setattr(
         tmate,
@@ -52,9 +66,9 @@ def test__on_ssh_debug_relation_joined_defer(
     )
 
     mock_event = MagicMock(spec=ops.RelationJoinedEvent)
-    charm.sshdebug._on_ssh_debug_relation_joined(mock_event)
 
-    mock_event.defer.assert_called_once()
+    with pytest.raises(tmate.IncompleteInitError):
+        charm.sshdebug._on_ssh_debug_relation_joined(mock_event)
 
 
 @pytest.mark.usefixtures("patch_get_fingerprints")
@@ -70,17 +84,12 @@ def test__on_ssh_debug_relation_joined(
     """
     mock_state = StateFactory()
     monkeypatch.setattr(charm.sshdebug, "state", mock_state)
+    mock_update_relation_data = MagicMock()
+    monkeypatch.setattr(charm.sshdebug, "update_relation_data", mock_update_relation_data)
 
     mock_event = MagicMock(spec=ops.RelationJoinedEvent)
-    mock_event.relation = MagicMock(spec=ops.Relation)
-    mock_event.relation.data = MagicMock(spec=ops.RelationData)
     charm.sshdebug._on_ssh_debug_relation_joined(mock_event)
 
-    mock_event.relation.data[charm.model.unit].update.assert_called_once_with(
-        {
-            "host": mock_state.ip_addr,
-            "port": str(tmate.PORT),
-            "rsa_fingerprint": fingerprints.rsa,
-            "ed25519_fingerprint": fingerprints.ed25519,
-        }
+    mock_update_relation_data.assert_called_once_with(
+        host=mock_state.ip_addr, fingerprints=fingerprints
     )
