@@ -10,3 +10,9 @@ jobs:
     with:
       juju-channel: 3.1/stable
       provider: lxd
+      tmate-debug: true
+      pre-run-script: |
+        -c "chmod +x tests/integration/pre_run_script.sh
+        ./tests/integration/pre_run_script.sh"
+      self-hosted-runner: true
+      self-hosted-runner-label: "edge"
