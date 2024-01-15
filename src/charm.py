@@ -11,7 +11,7 @@ import typing
 import ops
 
 import actions
-import sshdebug
+import ssh_debug
 import tmate
 from state import State
 
@@ -30,7 +30,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         super().__init__(*args)
         self.state = State.from_charm(self)
         self.actions = actions.Observer(self, self.state)
-        self.sshdebug = sshdebug.Observer(self, self.state)
+        self.sshdebug = ssh_debug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
 
@@ -54,7 +54,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         try:
             self.unit.status = ops.MaintenanceStatus("Installing packages.")
             tmate.install_dependencies()
-        except tmate.DependencyInstallError as exc:
+        except tmate.DependencySetupError as exc:
             logger.error("Failed to install docker package, %s.", exc)
             raise
 
@@ -67,11 +67,18 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         try:
             self.unit.status = ops.MaintenanceStatus("Starting tmate-ssh-server daemon.")
-            tmate.start_daemon()
+            tmate.start_daemon(address=str(self.state.ip_addr))
         except tmate.DaemonStartError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
 
+        try:
+            fingerprints = tmate.get_fingerprints()
+        except tmate.IncompleteInitError as exc:
+            logger.error("Something went wrong initializing keys, %s.", exc)
+            raise
+
+        self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
         self.unit.status = ops.ActiveStatus()
 
 

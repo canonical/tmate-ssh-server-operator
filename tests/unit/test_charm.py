@@ -26,11 +26,11 @@ def test__on_install_dependencies_error(
     assert: exceptions are re-raised.
     """
     mock_install_deps = MagicMock(
-        spec=tmate.install_dependencies, side_effect=[tmate.DependencyInstallError]
+        spec=tmate.install_dependencies, side_effect=[tmate.DependencySetupError]
     )
     monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
 
-    with pytest.raises(tmate.DependencyInstallError):
+    with pytest.raises(tmate.DependencySetupError):
         charm._on_install(MagicMock(spec=ops.InstallEvent))
 
 
@@ -93,6 +93,28 @@ def test__on_install_defer(
     mock_event.defer.assert_called_once()
 
 
+def test__on_install_error(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a monkeypatched tmate.get_fingerprints that raises an error.
+    act: when _on_install is called.
+    assert: the charm raises an error.
+    """
+    mock_install_deps = MagicMock(spec=tmate.install_dependencies)
+    monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
+    monkeypatch.setattr(tmate, "install_keys", MagicMock())
+    monkeypatch.setattr(tmate, "start_daemon", MagicMock())
+    monkeypatch.setattr(
+        tmate, "get_fingerprints", MagicMock(side_effect=[tmate.IncompleteInitError])
+    )
+
+    mock_event = MagicMock(spec=ops.InstallEvent)
+    with pytest.raises(tmate.IncompleteInitError):
+        charm._on_install(mock_event)
+
+
 def test__on_install(
     monkeypatch: pytest.MonkeyPatch,
     charm: TmateSSHServerOperatorCharm,
@@ -105,6 +127,7 @@ def test__on_install(
     monkeypatch.setattr(tmate, "install_dependencies", MagicMock(spec=tmate.install_dependencies))
     monkeypatch.setattr(tmate, "install_keys", MagicMock(spec=tmate.install_keys))
     monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
+    monkeypatch.setattr(tmate, "get_fingerprints", MagicMock(spec=tmate.get_fingerprints))
 
     mock_event = MagicMock(spec=ops.InstallEvent)
     charm._on_install(mock_event)
