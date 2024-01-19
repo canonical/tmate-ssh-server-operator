@@ -2,7 +2,7 @@
 
 ### Get server config
 
-To retrieve the server configuration used for tmate client(contents of `.tmate.conf`), use the
+To retrieve the server configuration used for tmate client (contents of `.tmate.conf`), use the
 following action.
 
 ```
@@ -24,5 +24,5 @@ tmate-config: |2
   set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 ```
 
-You can use the output above as tmate configuration file(`.tmate.conf`) contents on a tmate client
+You can use the output above as tmate configuration file (`.tmate.conf`) contents on a tmate client
 machine.

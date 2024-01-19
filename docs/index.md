@@ -4,17 +4,17 @@ A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
 deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
 open source terminal multiplexer, providing instant terminal sharing capabilities.
 
-Tmate is a terminal multiplexer that allows remote terminal sharing. It enables users to share
-their terminal session with other users over the internet, allowing them to collaborate, provide
-technical support, or demonstrate commands and procedures in real-time.
+Tmate enables users to share their terminal session with other users over the internet, allowing
+them to collaborate, provide technical support, or demonstrate commands and procedures in
+real-time.
 
-This charm provides the tmate-ssh-server service, and when paired with the tmate client provides
-self-hosted ssh relay server.
+This charm provides the tmate-ssh-server service, which is paired with the tmate client to provide
+an ssh relay server.
 
 For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
 straightforward through Juju's clean interface. Allowing machine relations to the
-[Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the running
-machines.
+[Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the runner VMs
+managed by the charm.
 
 ## Project and community
 

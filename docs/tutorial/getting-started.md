@@ -14,8 +14,9 @@ remote access without requiring complex network configurations.
 
 ### Prerequisites
 
-To deploy a tmate-ssh-server charm, you will need a juju bootstrapped with any machine controller.
-To see how to bootstrap your juju installation with LXD, please refer to the documentation
+To deploy a tmate-ssh-server charm, you will need a Juju controller bootstrapped with any machine
+controller type.
+To see how to bootstrap your Juju installation with LXD, please refer to the documentation
 on LXD [installation](https://juju.is/docs/juju/lxd).
 
 ### Setting up the tutorial model
@@ -84,7 +85,7 @@ $ juju ssh 1 -- "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session 
 $ juju ssh 1 -- "tmate -S /tmp/tmate.sock wait tmate-ready"
 # print tmate ssh details
 $ juju ssh 1 -- "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
-ssh -p10022 <token>@0.0.0.0
+ssh -p10022 <user>@0.0.0.0
 ```
 
 ### SSH into the tmate terminal
@@ -111,7 +112,7 @@ Then use the ssh command output from the previous step and replace `0.0.0.0` add
 IP of tmate-ssh-server unit.
 
 ```
-$ ssh <token>@<unit-ip>
+$ ssh <user>@<unit-ip>
 
 Tip: if you wish to use tmate only for remote access, run: tmate -F
 To see the following messages again, run in a tmate session: tmate show-messages
@@ -119,8 +120,8 @@ Press <q> or <ctrl-c> to continue
 ---------------------------------------------------------------------
 Connecting to <unit-ip>...
 Note: clear your terminal before sharing readonly access
-ssh session read only: ssh -p10022 ro-<ro-token>@<unit-ip>
-ssh session: ssh -p10022 <token>@<unit-ip>
+ssh session read only: ssh -p10022 ro-<ro-user>@<unit-ip>
+ssh session: ssh -p10022 <user>@<unit-ip>
 ```
 
 
