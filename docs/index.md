@@ -9,7 +9,7 @@ them to collaborate, provide technical support, or demonstrate commands and proc
 real-time.
 
 This charm provides the tmate-ssh-server service, which is paired with the tmate client to provide
-an ssh relay server.
+a self-hosted ssh relay server.
 
 For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
 straightforward through Juju's clean interface. Allowing machine relations to the
