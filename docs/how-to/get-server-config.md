@@ -2,14 +2,14 @@
 
 ### Get server config
 
-To retrieve the server configuration used for tmate client (contents of `.tmate.conf`), use the
+To retrieve the server configuration for tmate client (contents of `.tmate.conf`), run the
 following action.
 
 ```
 juju run tmate-ssh-server/0 get-server-config
 ```
 
-The output should look something similar to the contents below:
+The output should look similar to the contents below:
 
 ```
 Running operation 1 with 1 task
@@ -24,5 +24,5 @@ tmate-config: |2
   set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 ```
 
-You can use the output above as tmate configuration file (`.tmate.conf`) contents on a tmate client
-machine.
+You can use the output above as the tmate configuration file (`.tmate.conf`) contents on a tmate
+client machine.
