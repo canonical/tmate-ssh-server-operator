@@ -70,7 +70,8 @@ def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> No
         proxy_config: The proxy configuration to enable for dockerd.
 
     Raises:
-        DependencySetupError: if there was a problem installing/setting up Docker.
+        PackageNotFoundError: if the Docker apt package was not found.
+        PackageError: if there was a problem installing up Docker apt package.
     """
     if proxy_config:
         environment = jinja2.Environment(
@@ -88,7 +89,7 @@ def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> No
 
     try:
         apt.add_package("docker.io", update_cache=True)
-    except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
+    except (apt.PackageNotFoundError, apt.PackageError) as exc:
         logger.error("Failed to add docker package, %s.", exc)
         raise
     passwd.add_group("docker")
@@ -108,7 +109,7 @@ def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None
     try:
         apt.add_package(APT_DEPENDENCIES, update_cache=True)
         _setup_docker(proxy_config=proxy_config)
-    except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
+    except (apt.PackageNotFoundError, apt.PackageError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
 
 
