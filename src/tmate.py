@@ -89,12 +89,10 @@ def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> No
     try:
         apt.add_package("docker.io", update_cache=True)
     except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
-        raise DependencySetupError("Failed to apt install Docker.") from exc
+        logger.error("Failed to add docker package, %s.", exc)
+        raise
     passwd.add_group("docker")
-    try:
-        passwd.add_user_to_group(USER, "docker")
-    except ValueError as exc:
-        raise DependencySetupError(f"Failed to add user {USER} to docker group.") from exc
+    passwd.add_user_to_group(USER, "docker")
 
 
 def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
@@ -109,13 +107,9 @@ def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None
     """
     try:
         apt.add_package(APT_DEPENDENCIES, update_cache=True)
+        _setup_docker(proxy_config=proxy_config)
     except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
-    try:
-        _setup_docker(proxy_config=proxy_config)
-    except DependencySetupError as exc:
-        logger.error("Error setting up Docker, %s", exc)
-        raise
 
 
 def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:
@@ -162,9 +156,6 @@ def start_daemon(address: str) -> None:
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
-    except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to reload tmate-ssh-server daemon.") from exc
-    try:
         systemd.service_start(TMATE_SERVICE_NAME)
     except systemd.SystemdError as exc:
         raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc

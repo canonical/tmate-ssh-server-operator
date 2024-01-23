@@ -70,7 +70,7 @@ def test__setup_docker_error(exception: type[Exception], monkeypatch: pytest.Mon
         tmate.apt, "add_package", MagicMock(spec=apt.add_package, side_effect=[exception])
     )
 
-    with pytest.raises(tmate.DependencySetupError):
+    with pytest.raises(exception):
         tmate._setup_docker()
 
 
@@ -93,21 +93,6 @@ def test_install_dependencies_apt_error(
     monkeypatch.setattr(
         tmate.apt, "add_package", MagicMock(spec=apt.add_package, side_effect=[exception])
     )
-
-    with pytest.raises(tmate.DependencySetupError):
-        tmate.install_dependencies()
-
-
-def test_install_dependencies_add_user_to_group_error(monkeypatch: pytest.MonkeyPatch):
-    """
-    arrange: given a monkeypatched passwd module that raises an exception.
-    act: when install_dependencies is called.
-    assert: DependencyInstallError is raised.
-    """
-    monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
-    monkeypatch.setattr(tmate.apt, "add_package", MagicMock(spec=apt.add_package))
-    monkeypatch.setattr(tmate.passwd, "add_group", MagicMock(spec=tmate.passwd.add_group))
-    monkeypatch.setattr(tmate.passwd, "add_user_to_group", MagicMock(side_effect=[ValueError]))
 
     with pytest.raises(tmate.DependencySetupError):
         tmate.install_dependencies()
