@@ -84,7 +84,7 @@ def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> No
         DOCKER_DAEMON_CONFIG_PATH.write_text(daemon_config, encoding="utf-8")
 
     try:
-        apt.add_package("docker.io")
+        apt.add_package("docker.io", update_cache=True)
     except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
         raise DependencySetupError("Failed to apt install Docker.") from exc
     passwd.add_group("docker")
@@ -105,8 +105,7 @@ def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None
             dependencies.
     """
     try:
-        apt.update()
-        apt.add_package(APT_DEPENDENCIES)
+        apt.add_package(APT_DEPENDENCIES, update_cache=True)
     except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
     try:
