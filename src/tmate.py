@@ -7,6 +7,7 @@ import base64
 import dataclasses
 import hashlib
 import ipaddress
+import logging
 
 # subprocess module is required to install and start docker daemon processes, the security
 # implications have been considered.
@@ -38,6 +39,8 @@ USER = "ubuntu"
 GROUP = "ubuntu"
 
 PORT = 10022
+
+logger = logging.getLogger(__name__)
 
 
 class DependencySetupError(Exception):
@@ -111,7 +114,8 @@ def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None
     try:
         _setup_docker(proxy_config=proxy_config)
     except DependencySetupError as exc:
-        raise DependencySetupError("Failed to setup Docker") from exc
+        logger.error("Error setting up Docker, %s", exc)
+        raise
 
 
 def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:
