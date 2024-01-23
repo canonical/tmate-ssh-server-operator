@@ -12,6 +12,20 @@ import state
 from state import State
 
 
+def test_proxyconfig_invalid(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched os.environ mapping that contains invalid proxy values.
+    act: when charm state is initialized.
+    assert: CharmConfigInvalidError is raised.
+    """
+    monkeypatch.setattr(state.os, "environ", {"JUJU_CHARM_HTTP_PROXY": "INVALID_URL"})
+    mock_charm = MagicMock(spec=ops.CharmBase)
+    mock_charm.config = {}
+
+    with pytest.raises(state.CharmConfigInvalidError):
+        state.State.from_charm(mock_charm)
+
+
 def test_invalid_bind_address():
     """
     arrange: given mocked juju network.bind_address.

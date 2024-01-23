@@ -3,6 +3,7 @@
 
 """Fixtures for tmate-ssh-server charm integration tests."""
 import logging
+import secrets
 import typing
 from pathlib import Path
 
@@ -74,9 +75,9 @@ def pub_key_fixture():
     return pub_key_path.read_text(encoding="utf-8")
 
 
-@pytest_asyncio.fixture(scope="module", name="tmate_machine")
-async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
-    """A machine to test tmate ssh connection."""
+@pytest_asyncio.fixture(scope="module", name="machine")
+async def machine_fixture(model: Model, ops_test: OpsTest):
+    """An empty machine to interact with tmate server charm."""
     machine: Machine = await model.add_machine()
 
     async def wait_machine():
@@ -98,6 +99,12 @@ async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
     logger.info("Running update.")
     (retcode, _, stderr) = await ops_test.juju("ssh", str(machine.entity_id), "sudo apt update -y")
     assert retcode == 0, f"Failed to run apt update, {stderr}"
+    return machine
+
+
+@pytest_asyncio.fixture(scope="module", name="tmate_machine")
+async def ssh_machine_fixture(ops_test: OpsTest, machine: Machine):
+    """A machine to test tmate ssh connection."""
     logger.info("Installing tmate.")
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh",
@@ -106,3 +113,74 @@ async def ssh_machine_fixture(model: Model, ops_test: OpsTest):
     )
     assert retcode == 0, f"Failed to run apt install, {stdout} {stderr}"
     return machine
+
+
+@pytest_asyncio.fixture(scope="module", name="proxy_machine")
+async def proxy_machine_fixture(ops_test: OpsTest, machine: Machine):
+    """A machine to host squid proxy."""
+    logger.info("Installing squid.")
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "ssh",
+        str(machine.entity_id),
+        "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y squid",
+    )
+    assert retcode == 0, f"Failed to run apt install, {stdout} {stderr}"
+    squid_config = """
+http_port 0.0.0.0:3218
+
+cache_mem 8 MB
+
+maximum_object_size 4096 KB
+
+cache_dir ufs /var/spool/squid 100 16 256
+
+cache_access_log /var/log/squid/access.log
+cache_log /var/log/squid/cache.log
+cache_store_log /var/log/squid/store.log
+
+http_access allow all
+http_access deny all"""
+    temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
+    temp_config_file_path.write_text(squid_config, encoding="utf-8")
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "scp", temp_config_file_path.name, f"{machine.entity_id}:~/squid.conf"
+    )
+    assert retcode == 0, f"Failed to scp squid conf file {stdout} {stderr}"
+    temp_config_file_path.unlink()
+    # cannot scp directly to /etc due to permission error
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "ssh", str(machine.entity_id), "sudo mv ~/squid.conf /etc/squid/squid.conf"
+    )
+    assert retcode == 0, f"Failed to move squid conf file {stdout} {stderr}"
+    (retcode, stdout, stderr) = await ops_test.juju(
+        "ssh", str(machine.entity_id), "sudo systemctl restart squid.service"
+    )
+    assert retcode == 0, f"Failed to restart squid service, {stdout} {stderr}"
+    return machine
+
+
+@pytest_asyncio.fixture(scope="module", name="machine_ip")
+async def machine_ip_fixture(machine: Machine) -> str:
+    """The machine public IP address."""
+
+    def get_machine_ip_address():
+        """Get latest machine IP address."""
+        latest_machine = machine.latest()
+        addresses = latest_machine.data["addresses"]
+        try:
+            address = next(
+                iter(
+                    [
+                        address["value"]
+                        for address in addresses
+                        if address["scope"] != "local-machine"
+                    ]
+                )
+            )
+        except StopIteration:
+            return None
+        return address
+
+    await wait_for(get_machine_ip_address)
+
+    return get_machine_ip_address()

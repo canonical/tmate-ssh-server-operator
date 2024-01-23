@@ -12,12 +12,15 @@ import ipaddress
 # implications have been considered.
 import subprocess  # nosec
 import textwrap
+import time
 import typing
 from pathlib import Path
 
 import jinja2
 from charms.operator_libs_linux.v0 import apt, passwd
 from charms.operator_libs_linux.v1 import systemd
+
+import state
 
 APT_DEPENDENCIES = ["docker.io", "openssh-client"]
 
@@ -29,6 +32,8 @@ KEYS_DIR = WORK_DIR / "keys"
 RSA_PUB_KEY_PATH = KEYS_DIR / "ssh_host_rsa_key.pub"
 ED25519_PUB_KEY_PATH = KEYS_DIR / "ssh_host_ed25519_key.pub"
 TMATE_SSH_SERVER_SERVICE_PATH = Path("/etc/systemd/system/tmate-ssh-server.service")
+DOCKER_DAEMON_CONFIG_PATH = Path("/etc/docker/daemon.json")
+TMATE_SERVICE_NAME = "tmate-ssh-server"
 
 USER = "ubuntu"
 GROUP = "ubuntu"
@@ -56,17 +61,33 @@ class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
 
 
-def install_dependencies() -> None:
+def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
     """Install dependenciese required to start tmate-ssh-server container.
+
+    Args:
+        proxy_config: The proxy configuration to enable for dockerd.
 
     Raises:
         DependencySetupError: if there was something wrong installing the apt package
             dependencies.
     """
+    if proxy_config:
+        environment = jinja2.Environment(
+            loader=jinja2.FileSystemLoader("templates"), autoescape=True
+        )
+        docker_template = environment.get_template("docker_daemon.json.j2")
+        daemon_config = docker_template.render(
+            HTTP_PROXY=proxy_config.http_proxy,
+            HTTPS_PROXY=proxy_config.https_proxy,
+            NO_PROXY=proxy_config.no_proxy,
+        )
+        DOCKER_DAEMON_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        DOCKER_DAEMON_CONFIG_PATH.touch(exist_ok=True)
+        DOCKER_DAEMON_CONFIG_PATH.write_text(daemon_config, encoding="utf-8")
     try:
         apt.update()
         apt.add_package(APT_DEPENDENCIES)
-    except (apt.PackageNotFoundError, apt.PackageError) as exc:
+    except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
     passwd.add_group("docker")
     try:
@@ -120,11 +141,11 @@ def start_daemon(address: str) -> None:
     try:
         systemd.daemon_reload()
     except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to reload tmate-ssh-server daemon") from exc
+        raise DaemonStartError("Failed to reload tmate-ssh-server daemon.") from exc
     try:
-        systemd.service_start("tmate-ssh-server")
+        systemd.service_start(TMATE_SERVICE_NAME)
     except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to start tmate-ssh-server daemon") from exc
+        raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc
 
 
 @dataclasses.dataclass

@@ -53,7 +53,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         try:
             self.unit.status = ops.MaintenanceStatus("Installing packages.")
-            tmate.install_dependencies()
+            tmate.install_dependencies(self.state.proxy_config)
         except tmate.DependencySetupError as exc:
             logger.error("Failed to install docker package, %s.", exc)
             raise
