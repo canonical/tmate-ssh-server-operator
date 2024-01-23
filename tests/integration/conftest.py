@@ -163,8 +163,12 @@ http_access deny all"""
 async def machine_ip_fixture(machine: Machine) -> str:
     """The machine public IP address."""
 
-    def get_machine_ip_address():
-        """Get latest machine IP address."""
+    def get_machine_ip_address() -> typing.Optional[str]:
+        """Get latest machine IP address.
+
+        Returns:
+            The latest machine IP address if ready, None otherwise.
+        """
         latest_machine = machine.latest()
         addresses = latest_machine.data["addresses"]
         try:
@@ -183,4 +187,6 @@ async def machine_ip_fixture(machine: Machine) -> str:
 
     await wait_for(get_machine_ip_address)
 
-    return get_machine_ip_address()
+    # mypy doesn't understand that get_machine_ip_address has to be str from wait_for statement
+    # above.
+    return typing.cast(str, get_machine_ip_address())

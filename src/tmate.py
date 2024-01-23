@@ -12,7 +12,6 @@ import ipaddress
 # implications have been considered.
 import subprocess  # nosec
 import textwrap
-import time
 import typing
 from pathlib import Path
 
@@ -22,7 +21,7 @@ from charms.operator_libs_linux.v1 import systemd
 
 import state
 
-APT_DEPENDENCIES = ["docker.io", "openssh-client"]
+APT_DEPENDENCIES = ["openssh-client"]
 
 GIT_REPOSITORY_URL = "https://github.com/tmate-io/tmate-ssh-server.git"
 
@@ -61,15 +60,14 @@ class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
 
 
-def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
-    """Install dependenciese required to start tmate-ssh-server container.
+def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
+    """Install and configure proxy settings for docker if available.
 
     Args:
         proxy_config: The proxy configuration to enable for dockerd.
 
     Raises:
-        DependencySetupError: if there was something wrong installing the apt package
-            dependencies.
+        DependencySetupError: if there was a problem installing/setting up Docker.
     """
     if proxy_config:
         environment = jinja2.Environment(
@@ -84,16 +82,37 @@ def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None
         DOCKER_DAEMON_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
         DOCKER_DAEMON_CONFIG_PATH.touch(exist_ok=True)
         DOCKER_DAEMON_CONFIG_PATH.write_text(daemon_config, encoding="utf-8")
+
     try:
-        apt.update()
-        apt.add_package(APT_DEPENDENCIES)
+        apt.add_package("docker.io")
     except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
-        raise DependencySetupError("Failed to install apt packages.") from exc
+        raise DependencySetupError("Failed to apt install Docker.") from exc
     passwd.add_group("docker")
     try:
         passwd.add_user_to_group(USER, "docker")
     except ValueError as exc:
         raise DependencySetupError(f"Failed to add user {USER} to docker group.") from exc
+
+
+def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
+    """Install dependenciese required to start tmate-ssh-server container.
+
+    Args:
+        proxy_config: The proxy configuration to enable for dockerd.
+
+    Raises:
+        DependencySetupError: if there was something wrong installing the apt package
+            dependencies.
+    """
+    try:
+        apt.update()
+        apt.add_package(APT_DEPENDENCIES)
+    except (apt.PackageNotFoundError, apt.PackageError, subprocess.CalledProcessError) as exc:
+        raise DependencySetupError("Failed to install apt packages.") from exc
+    try:
+        _setup_docker(proxy_config=proxy_config)
+    except DependencySetupError as exc:
+        raise DependencySetupError("Failed to setup Docker") from exc
 
 
 def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:

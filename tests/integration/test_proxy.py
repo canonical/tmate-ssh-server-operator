@@ -38,8 +38,12 @@ async def test_proxy(
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     unit: Unit = next(iter(app.units))
 
-    async def wait_for_access_log():
-        """Wait until access log contains proxy access logs from tmate charm to docker."""
+    async def wait_for_access_log() -> bool:
+        """Wait until access log contains proxy access logs from tmate charm to docker.
+
+        Returns:
+            Whether ghcr.io access was found in proxy log.
+        """
         (retcode, stdout, stderr) = await ops_test.juju(
             "ssh", proxy_machine.entity_id, "sudo cat /var/log/squid/access.log"
         )

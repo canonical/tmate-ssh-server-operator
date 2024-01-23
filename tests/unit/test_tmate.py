@@ -41,8 +41,6 @@ def test_install_dependencies_proxy_config(monkeypatch: pytest.MonkeyPatch):
         )
         tmate.install_dependencies(proxy_config=proxy_config)
 
-        print(tmp_file_path.read_text(encoding="utf-8"))
-
         assert f"""{{
   "proxies": {{
     "http-proxy": "{proxy_config.http_proxy}",
@@ -52,6 +50,28 @@ def test_install_dependencies_proxy_config(monkeypatch: pytest.MonkeyPatch):
 }}""" == tmp_file_path.read_text(
             encoding="utf-8"
         )
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(apt.PackageNotFoundError, id="package not found"),
+        pytest.param(apt.PackageError, id="package error"),
+    ],
+)
+def test__setup_docker_error(exception: type[Exception], monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched apt module that raises an exception.
+    act: when _setup_docker is called.
+    assert: DependencyInstallError is raised.
+    """
+    monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
+    monkeypatch.setattr(
+        tmate.apt, "add_package", MagicMock(spec=apt.add_package, side_effect=[exception])
+    )
+
+    with pytest.raises(tmate.DependencySetupError):
+        tmate._setup_docker()
 
 
 @pytest.mark.parametrize(

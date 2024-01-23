@@ -88,7 +88,7 @@ class State:
         proxy_config: The proxy configuration to apply to services used by tmate.
     """
 
-    ip_addr: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str, None]
+    ip_addr: typing.Optional[typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]]
     proxy_config: typing.Optional[ProxyConfig]
 
     @classmethod
