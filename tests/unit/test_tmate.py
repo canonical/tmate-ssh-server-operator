@@ -5,6 +5,7 @@
 
 import textwrap
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,8 +13,65 @@ from charms.operator_libs_linux.v0 import apt
 
 import tmate
 
+from .factories import ProxyConfigFactory
+
 # Need access to protected functions for testing
 # pylint: disable=protected-access
+
+
+def test_install_dependencies_proxy_config(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given proxy config, mocked DOCKER_DAEMON_CONFIG_PATH and mocked apt module functions.
+    act: when install_dependencies is called.
+    assert: docker daemon configuration is written.
+    """
+    monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
+    monkeypatch.setattr(tmate.apt, "add_package", MagicMock(spec=apt.add_package))
+    monkeypatch.setattr(tmate.passwd, "add_group", MagicMock(spec=tmate.passwd.add_group))
+    monkeypatch.setattr(
+        tmate.passwd, "add_user_to_group", MagicMock(spec=tmate.passwd.add_user_to_group)
+    )
+    proxy_config = ProxyConfigFactory()
+
+    with NamedTemporaryFile() as temporary_docker_daemon_file:
+        monkeypatch.setattr(
+            tmate,
+            "DOCKER_DAEMON_CONFIG_PATH",
+            (tmp_file_path := Path(temporary_docker_daemon_file.name)),
+        )
+        tmate.install_dependencies(proxy_config=proxy_config)
+
+        assert f"""{{
+  "proxies": {{
+    "http-proxy": "{proxy_config.http_proxy}",
+    "https-proxy": "{proxy_config.https_proxy}",
+    "no-proxy": "{proxy_config.no_proxy}"
+  }}
+}}""" == tmp_file_path.read_text(
+            encoding="utf-8"
+        )
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(apt.PackageNotFoundError, id="package not found"),
+        pytest.param(apt.PackageError, id="package error"),
+    ],
+)
+def test__setup_docker_error(exception: type[Exception], monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched apt module that raises an exception.
+    act: when _setup_docker is called.
+    assert: DependencyInstallError is raised.
+    """
+    monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
+    monkeypatch.setattr(
+        tmate.apt, "add_package", MagicMock(spec=apt.add_package, side_effect=[exception])
+    )
+
+    with pytest.raises(exception):
+        tmate._setup_docker()
 
 
 @pytest.mark.parametrize(
@@ -35,21 +93,6 @@ def test_install_dependencies_apt_error(
     monkeypatch.setattr(
         tmate.apt, "add_package", MagicMock(spec=apt.add_package, side_effect=[exception])
     )
-
-    with pytest.raises(tmate.DependencySetupError):
-        tmate.install_dependencies()
-
-
-def test_install_dependencies_add_user_to_group_error(monkeypatch: pytest.MonkeyPatch):
-    """
-    arrange: given a monkeypatched passwd module that raises an exception.
-    act: when install_dependencies is called.
-    assert: DependencyInstallError is raised.
-    """
-    monkeypatch.setattr(tmate.apt, "update", MagicMock(spec=apt.update))
-    monkeypatch.setattr(tmate.apt, "add_package", MagicMock(spec=apt.add_package))
-    monkeypatch.setattr(tmate.passwd, "add_group", MagicMock(spec=tmate.passwd.add_group))
-    monkeypatch.setattr(tmate.passwd, "add_user_to_group", MagicMock(side_effect=[ValueError]))
 
     with pytest.raises(tmate.DependencySetupError):
         tmate.install_dependencies()

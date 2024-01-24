@@ -7,6 +7,7 @@ import base64
 import dataclasses
 import hashlib
 import ipaddress
+import logging
 
 # subprocess module is required to install and start docker daemon processes, the security
 # implications have been considered.
@@ -19,7 +20,9 @@ import jinja2
 from charms.operator_libs_linux.v0 import apt, passwd
 from charms.operator_libs_linux.v1 import systemd
 
-APT_DEPENDENCIES = ["docker.io", "openssh-client"]
+import state
+
+APT_DEPENDENCIES = ["openssh-client"]
 
 GIT_REPOSITORY_URL = "https://github.com/tmate-io/tmate-ssh-server.git"
 
@@ -29,11 +32,15 @@ KEYS_DIR = WORK_DIR / "keys"
 RSA_PUB_KEY_PATH = KEYS_DIR / "ssh_host_rsa_key.pub"
 ED25519_PUB_KEY_PATH = KEYS_DIR / "ssh_host_ed25519_key.pub"
 TMATE_SSH_SERVER_SERVICE_PATH = Path("/etc/systemd/system/tmate-ssh-server.service")
+DOCKER_DAEMON_CONFIG_PATH = Path("/etc/docker/daemon.json")
+TMATE_SERVICE_NAME = "tmate-ssh-server"
 
 USER = "ubuntu"
 GROUP = "ubuntu"
 
 PORT = 10022
+
+logger = logging.getLogger(__name__)
 
 
 class DependencySetupError(Exception):
@@ -56,23 +63,54 @@ class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
 
 
-def install_dependencies() -> None:
+def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
+    """Install and configure proxy settings for docker if available.
+
+    Args:
+        proxy_config: The proxy configuration to enable for dockerd.
+
+    Raises:
+        PackageNotFoundError: if the Docker apt package was not found.
+        PackageError: if there was a problem installing up Docker apt package.
+    """
+    if proxy_config:
+        environment = jinja2.Environment(
+            loader=jinja2.FileSystemLoader("templates"), autoescape=True
+        )
+        docker_template = environment.get_template("docker_daemon.json.j2")
+        daemon_config = docker_template.render(
+            HTTP_PROXY=proxy_config.http_proxy,
+            HTTPS_PROXY=proxy_config.https_proxy,
+            NO_PROXY=proxy_config.no_proxy,
+        )
+        DOCKER_DAEMON_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
+        DOCKER_DAEMON_CONFIG_PATH.touch(exist_ok=True)
+        DOCKER_DAEMON_CONFIG_PATH.write_text(daemon_config, encoding="utf-8")
+
+    try:
+        apt.add_package("docker.io", update_cache=True)
+    except (apt.PackageNotFoundError, apt.PackageError) as exc:
+        logger.error("Failed to add docker package, %s.", exc)
+        raise
+    passwd.add_group("docker")
+    passwd.add_user_to_group(USER, "docker")
+
+
+def install_dependencies(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
     """Install dependenciese required to start tmate-ssh-server container.
+
+    Args:
+        proxy_config: The proxy configuration to enable for dockerd.
 
     Raises:
         DependencySetupError: if there was something wrong installing the apt package
             dependencies.
     """
     try:
-        apt.update()
-        apt.add_package(APT_DEPENDENCIES)
+        apt.add_package(APT_DEPENDENCIES, update_cache=True)
+        _setup_docker(proxy_config=proxy_config)
     except (apt.PackageNotFoundError, apt.PackageError) as exc:
         raise DependencySetupError("Failed to install apt packages.") from exc
-    passwd.add_group("docker")
-    try:
-        passwd.add_user_to_group(USER, "docker")
-    except ValueError as exc:
-        raise DependencySetupError(f"Failed to add user {USER} to docker group.") from exc
 
 
 def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Address, str]) -> None:
@@ -119,12 +157,9 @@ def start_daemon(address: str) -> None:
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
+        systemd.service_start(TMATE_SERVICE_NAME)
     except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to reload tmate-ssh-server daemon") from exc
-    try:
-        systemd.service_start("tmate-ssh-server")
-    except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to start tmate-ssh-server daemon") from exc
+        raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc
 
 
 @dataclasses.dataclass
