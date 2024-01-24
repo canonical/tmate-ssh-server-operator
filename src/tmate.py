@@ -14,7 +14,10 @@ import logging
 import subprocess  # nosec
 import textwrap
 import typing
+from datetime import datetime, timedelta
+from functools import partial
 from pathlib import Path
+from time import sleep
 
 import jinja2
 from charms.operator_libs_linux.v0 import apt, passwd
@@ -138,6 +141,32 @@ def install_keys(host_ip: typing.Union[ipaddress.IPv4Address, ipaddress.IPv6Addr
         raise KeyInstallError from exc
 
 
+def _wait_for(
+    func: typing.Callable[[], typing.Any], timeout: int = 300, check_interval: int = 10
+) -> None:
+    """Wait for function execution to become truthy.
+
+    Args:
+        func: A callback function to wait to return a truthy value.
+        timeout: Time in seconds to wait for function result to become truthy.
+        check_interval: Time in seconds to wait between ready checks.
+
+    Raises:
+        TimeoutError: if the callback function did not return a truthy value within timeout.
+    """
+    start_time = now = datetime.now()
+    min_wait_seconds = timedelta(seconds=timeout)
+    while now - start_time < min_wait_seconds:
+        if func():
+            break
+        now = datetime.now()
+        sleep(check_interval)
+    else:
+        if func():
+            return
+        raise TimeoutError()
+
+
 def start_daemon(address: str) -> None:
     """Install unit files and start daemon.
 
@@ -158,8 +187,11 @@ def start_daemon(address: str) -> None:
     try:
         systemd.daemon_reload()
         systemd.service_start(TMATE_SERVICE_NAME)
+        _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
         raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc
+    except TimeoutError as exc:
+        raise DaemonStartError("Timed out waiting for tmate service to start.") from exc
 
 
 @dataclasses.dataclass
