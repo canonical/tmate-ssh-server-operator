@@ -78,6 +78,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             logger.error("Something went wrong initializing keys, %s.", exc)
             raise
 
+        self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
         self.unit.status = ops.ActiveStatus()
 

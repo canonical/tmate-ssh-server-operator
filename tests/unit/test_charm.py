@@ -122,7 +122,7 @@ def test__on_install(
     """
     arrange: given a monkeypatched tmate installation function calls.
     act: when _on_install is called.
-    assert: the unit is in active status.
+    assert: the unit is in active status and tmate ssh server port is opened.
     """
     monkeypatch.setattr(tmate, "install_dependencies", MagicMock(spec=tmate.install_dependencies))
     monkeypatch.setattr(tmate, "install_keys", MagicMock(spec=tmate.install_keys))
@@ -132,4 +132,5 @@ def test__on_install(
     mock_event = MagicMock(spec=ops.InstallEvent)
     charm._on_install(mock_event)
 
+    assert ops.Port(protocol="tcp", port=tmate.PORT) in charm.unit.opened_ports()
     assert charm.unit.status.name == "active"

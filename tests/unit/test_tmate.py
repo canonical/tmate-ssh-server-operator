@@ -138,9 +138,45 @@ def test_install_keys(monkeypatch: pytest.MonkeyPatch):
     tmate.install_keys(MagicMock())
 
 
+def test__wait_for_timeout_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a mock function that returns Falsy value.
+    act: when _wait_for function is called.
+    assert: TimeoutError is raised.
+    """
+    monkeypatch.setattr(tmate, "sleep", MagicMock(spec=tmate.sleep))  # to speed up testing
+    mock_func = MagicMock(return_value=False)
+
+    with pytest.raises(TimeoutError):
+        tmate._wait_for(mock_func, timeout=2, check_interval=1)
+
+
+@pytest.mark.parametrize(
+    "timeout, interval",
+    [
+        pytest.param(
+            3,
+            1,
+            id="within interval",
+        ),
+        pytest.param(0, 1, id="last check"),
+    ],
+)
+def test__wait_for(monkeypatch: pytest.MonkeyPatch, timeout: int, interval: int):
+    """
+    arrange: given a mock function that returns Truthy value.
+    act: when _wait_for function is called.
+    assert: the function returns without raising an error.
+    """
+    monkeypatch.setattr(tmate, "sleep", MagicMock(spec=tmate.sleep))  # to speed up testing
+    mock_func = MagicMock(return_value=True)
+
+    tmate._wait_for(mock_func, timeout=timeout, check_interval=interval)
+
+
 def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    arrange: given a monkeypatched systemd call that raises SystemdError.
     act: when start_daemon is called.
     assert: DaemonStartError is raised.
     """
@@ -159,8 +195,42 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonStartError) as exc:
         tmate.start_daemon(address="test")
+
+    assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
+
+
+def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
+    act: when start_daemon is called.
+    assert: DaemonStartError is raised.
+    """
+    monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(
+        tmate.systemd,
+        "daemon_reload",
+        MagicMock(spec=tmate.systemd.daemon_reload),
+    )
+    monkeypatch.setattr(
+        tmate.systemd,
+        "service_start",
+        MagicMock(spec=tmate.systemd.service_start),
+    )
+    monkeypatch.setattr(
+        tmate,
+        "_wait_for",
+        MagicMock(spec=tmate._wait_for, side_effect=TimeoutError),
+    )
+
+    with pytest.raises(tmate.DaemonStartError) as exc:
+        tmate.start_daemon(address="test")
+
+    assert "Timed out waiting for tmate service to start." in str(exc.value)
 
 
 def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
