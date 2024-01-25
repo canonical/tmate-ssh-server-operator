@@ -158,13 +158,12 @@ def _wait_for(
     min_wait_seconds = timedelta(seconds=timeout)
     while now - start_time < min_wait_seconds:
         if func():
-            break
+            return
         now = datetime.now()
         sleep(check_interval)
-    else:
-        if func():
-            return
-        raise TimeoutError()
+    if func():
+        return
+    raise TimeoutError()
 
 
 def start_daemon(address: str) -> None:

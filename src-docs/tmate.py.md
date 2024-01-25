@@ -66,7 +66,7 @@ Install key creation script and generate keys.
 
 ---
 
-<a href="../src/tmate.py#L170"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L169"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `start_daemon`
 
@@ -91,7 +91,7 @@ Install unit files and start daemon.
 
 ---
 
-<a href="../src/tmate.py#L224"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L223"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `get_fingerprints`
 
@@ -115,7 +115,7 @@ Get fingerprint from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L248"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L247"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `generate_tmate_conf`
 
