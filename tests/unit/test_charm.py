@@ -164,34 +164,70 @@ def test__on_update_status_error(
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
 
-def test__on_update_status(
+def test__on_update_status_remove_stopped_containers_error(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+    caplog: pytest.LogCaptureFixture,
+):
+    """
+    arrange: given a monkeypatched tmate.remove_stopped_containers that raises an exception.
+    act: when _on_update_status is called.
+    assert: the exception is caught and logged.
+    """
+    monkeypatch.setattr(tmate, "is_running", MagicMock(return_value=False))
+    monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
+    monkeypatch.setattr(
+        tmate, "remove_stopped_containers", MagicMock(side_effect=tmate.DockerError)
+    )
+
+    charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+    assert "Failed to remove stopped containers." in caplog.text
+
+
+def test__on_update_status_restart_daemon(
     monkeypatch: pytest.MonkeyPatch,
     charm: TmateSSHServerOperatorCharm,
 ):
     """
-    arrange: given multiple scenarios.
-        1. a monkeypatched tmate.is_running which returns False.
-        2. a monkeypatched tmate.is_running which returns True.
+    arrange: given a monkeypatched tmate.is_running which returns False.
     act: when _on_update_status is called.
-    assert:
-        1. tmate ssh server is restarted.
-        2. tmate ssh server is not restarted.
+    assert: status is set to active, tmate ssh server is restarted and
+        stopped docker containers are removed.
     """
     is_running_mock = MagicMock(return_value=False)
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
     monkeypatch.setattr(tmate, "is_running", is_running_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
-    # 1. tmate ssh server is restarted
     charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
     start_daemon_mock.assert_called_once()
+    remove_stopped_containers_mock.assert_called_once()
     assert charm.unit.status.name == "active"
 
-    # 2. tmate ssh server is not restarted
-    is_running_mock.return_value = True
-    start_daemon_mock.reset_mock()
+
+def test__on_update_status_everything_ok(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a monkeypatched tmate.is_running which returns True.
+    act: when _on_update_status is called.
+    assert: status is set to active, tmate ssh server is not restarted and
+        stopped docker containers are not removed.
+    """
+    is_running_mock = MagicMock(return_value=True)
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
+    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
     charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
     start_daemon_mock.assert_not_called()
+    remove_stopped_containers_mock.assert_not_called()
     assert charm.unit.status.name == "active"

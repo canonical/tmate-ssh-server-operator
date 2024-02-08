@@ -110,7 +110,7 @@ async def test_restart_of_inactive_service(
     assert retcode == 0, f"Error running docker ps command, {stdout}, {stderr}"
     assert "tmate-ssh-server" not in stdout, "tmate-ssh-server service is still running"
     (retcode, _, _) = await ops_test.juju(
-        "ssh", unit.entity_id, "--", "systemctl status --quiet is-active tmate-ssh-server"
+        "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )
     assert retcode != 0, "tmate-ssh-server service is still running"
 
@@ -118,7 +118,7 @@ async def test_restart_of_inactive_service(
         await unit.model.wait_for_idle(apps=[tmate_ssh_server.name], status=ActiveStatus.name)
 
     (retcode, stdout, stderr) = await ops_test.juju(
-        "ssh", unit.entity_id, "--", "systemctl status --quiet is-active tmate-ssh-server"
+        "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )
     assert retcode == 0, f"tmate-ssh-server service is not running, {stdout}, {stderr}"
 

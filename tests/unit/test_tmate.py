@@ -275,7 +275,7 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
 
 def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    arrange: given a monkeypatched systemd that raises SystemdError.
     act: when start_daemon is called.
     assert: DaemonStartError is raised.
     """
@@ -337,7 +337,7 @@ def test_get_fingerprints_incomplete_init_error(monkeypatch: pytest.MonkeyPatch)
 
 def test_get_fingerprints(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched subprocess.check_output calls.
+    arrange: given a monkeypatched _calculate_fingerprint method.
     act: when get_fingerprints is called.
     assert: Correct fingerprint data is returned.
     """
@@ -404,3 +404,22 @@ def test_generate_tmate_conf(fingerprints: tmate.Fingerprints):
         )
         == tmate.generate_tmate_conf(host)
     )
+
+
+def test_remove_stopped_containers_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    act: when remove_stopped_containers is called.
+    assert: DockerError is raised.
+    """
+    monkeypatch.setattr(
+        tmate.subprocess,
+        "check_call",
+        MagicMock(
+            spec=tmate.subprocess.check_call,
+            side_effect=[tmate.subprocess.CalledProcessError(returncode=1, cmd="test")],
+        ),
+    )
+
+    with pytest.raises(tmate.DockerError):
+        tmate.remove_stopped_containers()
