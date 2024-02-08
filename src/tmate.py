@@ -58,14 +58,6 @@ class DaemonError(Exception):
     """Represents an error with the tmate-ssh-server daemon."""
 
 
-class DaemonStartError(DaemonError):
-    """Represents an error while starting tmate-ssh-server daemon."""
-
-
-class DaemonStatusError(DaemonError):
-    """Represents an error while checking the status of tmate-ssh-server daemon."""
-
-
 class IncompleteInitError(Exception):
     """The tmate-ssh-server has not been fully initialized."""
 
@@ -185,14 +177,14 @@ def is_running() -> bool:
         True if the tmate-ssh-server service is running, False otherwise.
 
     Raises:
-        DaemonStatusError: if there was an error checking the status of tmate-ssh-server.
+        DaemonError: if there was an error checking the status of tmate-ssh-server.
     """
     try:
         return systemd.service_running(TMATE_SERVICE_NAME)
     except systemd.SystemdError as exc:
-        raise DaemonStatusError("Failed to check tmate-ssh-server status.") from exc
+        raise DaemonError("Failed to check tmate-ssh-server status.") from exc
     except TimeoutError as exc:
-        raise DaemonStatusError("Timed out waiting for tmate service status.") from exc
+        raise DaemonError("Timed out waiting for tmate service status.") from exc
 
 
 def start_daemon(address: str) -> None:
@@ -202,7 +194,7 @@ def start_daemon(address: str) -> None:
         address: The IP address to bind to.
 
     Raises:
-        DaemonStartError: if there was an error starting the tmate-ssh-server docker process.
+        DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
@@ -218,9 +210,9 @@ def start_daemon(address: str) -> None:
         systemd.service_start(TMATE_SERVICE_NAME)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc
+        raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
-        raise DaemonStartError("Timed out waiting for tmate service to start.") from exc
+        raise DaemonError("Timed out waiting for tmate service to start.") from exc
 
 
 @dataclasses.dataclass

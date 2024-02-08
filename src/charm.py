@@ -44,7 +44,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         Raises:
             DependencyInstallError: if the dependencies required to start charm has failed.
             KeyInstallError: if the ssh-key installation and fingerprint generation failed.
-            DaemonStartError: if the workload daemon was unable to start.
+            DaemonError: if the workload daemon was unable to start.
         """
         if not self.state.ip_addr:
             logger.warning("Unit address not assigned.")
@@ -69,7 +69,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         try:
             self.unit.status = ops.MaintenanceStatus("Starting tmate-ssh-server daemon.")
             tmate.start_daemon(address=str(self.state.ip_addr))
-        except tmate.DaemonStartError as exc:
+        except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
 

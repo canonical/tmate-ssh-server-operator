@@ -65,10 +65,10 @@ def test__on_install_daemon_error(
     monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
     mock_install_keys = MagicMock(spec=tmate.install_keys)
     monkeypatch.setattr(tmate, "install_keys", mock_install_keys)
-    mock_install_deps = MagicMock(spec=tmate.start_daemon, side_effect=[tmate.DaemonStartError])
+    mock_install_deps = MagicMock(spec=tmate.start_daemon, side_effect=[tmate.DaemonError])
     monkeypatch.setattr(tmate, "start_daemon", mock_install_deps)
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonError):
         charm._on_install(MagicMock(spec=ops.InstallEvent))
 
 
@@ -176,19 +176,19 @@ def test__on_update_status_error(
     assert: the errors are not caught
     """
     # 1. tmate.is_running raises an error
-    is_running_mock = MagicMock(side_effect=tmate.DaemonStatusError)
+    is_running_mock = MagicMock(side_effect=tmate.DaemonError)
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
     monkeypatch.setattr(tmate, "is_running", is_running_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
 
-    with pytest.raises(tmate.DaemonStatusError):
+    with pytest.raises(tmate.DaemonError):
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
     # 2. tmate.is_running returns False and start_daemon raises an error
     is_running_mock.side_effect = [False]
-    start_daemon_mock.side_effect = tmate.DaemonStartError
+    start_daemon_mock.side_effect = tmate.DaemonError
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonError):
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
 

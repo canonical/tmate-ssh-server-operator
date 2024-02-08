@@ -195,7 +195,7 @@ def test_is_running_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched systemd call that raises errors.
     act: when is_running is called.
-    assert: DaemonStatusError is raised in both cases
+    assert: DaemonError is raised in both cases
     """
     service_running_mock = MagicMock(
         spec=tmate.systemd.service_running, side_effect=tmate.systemd.SystemdError
@@ -203,13 +203,13 @@ def test_is_running_error(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tmate.systemd, "service_running", service_running_mock)
 
     # 1. SystemdError is raised.
-    with pytest.raises(tmate.DaemonStatusError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.is_running()
     assert "Failed to check tmate-ssh-server status." in str(exc.value)
 
     # 2. TimeoutError is raised.
     service_running_mock.side_effect = TimeoutError
-    with pytest.raises(tmate.DaemonStatusError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.is_running()
     assert "Timed out waiting for tmate service status." in str(exc.value)
 
@@ -218,7 +218,7 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched systemd call that raises SystemdError.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -235,7 +235,7 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
@@ -245,7 +245,7 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -272,7 +272,7 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
         MagicMock(spec=tmate._wait_for, side_effect=TimeoutError),
     )
 
-    with pytest.raises(tmate.DaemonStartError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Timed out waiting for tmate service to start." in str(exc.value)
@@ -282,7 +282,7 @@ def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched systemd call that raises SystemdError.
     act: when enable_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -304,7 +304,7 @@ def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonError):
         tmate.start_daemon(address="test")
 
 
@@ -312,7 +312,7 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched systemd that raises SystemdError.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -337,7 +337,7 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonError):
         tmate.start_daemon(address="test")
 
 
