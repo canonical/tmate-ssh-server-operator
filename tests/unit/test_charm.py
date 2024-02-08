@@ -136,6 +136,34 @@ def test__on_install(
     assert charm.unit.status.name == "active"
 
 
+def test__on_update_status_ip_not_assigned(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a monkeypatched state.ip_addr that does not yet have a value.
+    act: when _on_update_status is called.
+    assert: the charm returns and calls no other functions.
+    """
+    is_running_mock = MagicMock(return_value=True)
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
+    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
+
+    mock_state = MagicMock(spec=State)
+    mock_state.ip_addr = None
+    monkeypatch.setattr(charm, "state", mock_state)
+
+    mock_event = MagicMock(spec=ops.UpdateStatusEvent)
+    charm._on_update_status(mock_event)
+
+    is_running_mock.assert_not_called()
+    start_daemon_mock.assert_not_called()
+    remove_stopped_containers_mock.assert_not_called()
+
+
 def test__on_update_status_error(
     monkeypatch: pytest.MonkeyPatch,
     charm: TmateSSHServerOperatorCharm,

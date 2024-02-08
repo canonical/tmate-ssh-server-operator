@@ -85,6 +85,10 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
     def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:
         """Check the health of the workload and restart if necessary."""
+        if not self.state.ip_addr:
+            logger.warning("Unit address not assigned. Exit hook.")
+            return
+
         if not tmate.is_running():
             logger.error("tmate-ssh-server is not running. Will restart.")
 
