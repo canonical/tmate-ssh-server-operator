@@ -3,6 +3,8 @@
 
 """tmate-ssh-server charm tmate module unit tests."""
 
+# subprocess is used by tmate module. Security implications have been considered.
+import subprocess  # nosec
 import textwrap
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -174,44 +176,50 @@ def test__wait_for(monkeypatch: pytest.MonkeyPatch, timeout: int, interval: int)
     tmate._wait_for(mock_func, timeout=timeout, check_interval=interval)
 
 
-def test_is_running(monkeypatch: pytest.MonkeyPatch):
+def test_status(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched systemd call.
+    arrange: given a monkeypatched subprocess call which returns zero exit code.
     act: when is_running is called.
     assert: the output of the systemd call is returned.
     """
-    service_running_mock = MagicMock(spec=tmate.systemd.service_running, return_value=True)
-    monkeypatch.setattr(tmate.systemd, "service_running", service_running_mock)
+    subprocess_mock = MagicMock(spec=tmate.subprocess.check_output, return_value=b"active")
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
 
-    # 1. True is returned.
-    assert tmate.is_running()
-
-    # 2. False is returned.
-    service_running_mock.return_value = False
-    assert not tmate.is_running()
+    assert tmate.status() == tmate.DaemonStatus(running=True, status="active")
 
 
-def test_is_running_error(monkeypatch: pytest.MonkeyPatch):
+def test_status_not_running(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched systemd call that raises errors.
+    arrange: given a monkeypatched subprocess call which returns unit not running exit code.
     act: when is_running is called.
+    assert: the output of the systemd call is returned.
+    """
+    subprocess_mock = MagicMock(
+        spec=tmate.subprocess.check_output,
+        side_effect=subprocess.CalledProcessError(
+            tmate.SYSTEMD_UNIT_NOT_RUNNING_CODE, "test", output=b"inactive"
+        ),
+    )
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
+
+    assert tmate.status() == tmate.DaemonStatus(running=False, status="inactive")
+
+
+def test_status_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call that raises an error.
+        This error does not indicate that the service is not running.
+    act: when status is called.
     assert: DaemonError is raised in both cases
     """
-    service_running_mock = MagicMock(
-        spec=tmate.systemd.service_running, side_effect=tmate.systemd.SystemdError
+    subprocess_mock = MagicMock(
+        spec=tmate.subprocess.check_output, side_effect=subprocess.CalledProcessError(1, "test")
     )
-    monkeypatch.setattr(tmate.systemd, "service_running", service_running_mock)
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
 
-    # 1. SystemdError is raised.
     with pytest.raises(tmate.DaemonError) as exc:
-        tmate.is_running()
+        tmate.status()
     assert "Failed to check tmate-ssh-server status." in str(exc.value)
-
-    # 2. TimeoutError is raised.
-    service_running_mock.side_effect = TimeoutError
-    with pytest.raises(tmate.DaemonError) as exc:
-        tmate.is_running()
-    assert "Timed out waiting for tmate service status." in str(exc.value)
 
 
 def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):

@@ -43,6 +43,9 @@ GROUP = "ubuntu"
 
 PORT = 10022
 
+# systemd exit codes: https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/iniscrptact.html
+SYSTEMD_UNIT_NOT_RUNNING_CODE = 3
+
 logger = logging.getLogger(__name__)
 
 
@@ -68,6 +71,19 @@ class FingerprintError(Exception):
 
 class DockerError(Exception):
     """Represents an error using a docker command."""
+
+
+@dataclasses.dataclass
+class DaemonStatus:
+    """The status of the tmate-ssh-server daemon.
+
+    Attributes:
+        running: True if the daemon is running, False otherwise.
+        status: The status string of the daemon process.
+    """
+
+    running: bool
+    status: str
 
 
 def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
@@ -170,7 +186,7 @@ def _wait_for(
     raise TimeoutError()
 
 
-def is_running() -> bool:
+def status() -> DaemonStatus:
     """Check if the tmate-ssh-server service is running.
 
     Returns:
@@ -180,11 +196,13 @@ def is_running() -> bool:
         DaemonError: if there was an error checking the status of tmate-ssh-server.
     """
     try:
-        return systemd.service_running(TMATE_SERVICE_NAME)
-    except systemd.SystemdError as exc:
+        status_str = subprocess.check_output(["systemctl", "status", TMATE_SERVICE_NAME])  # nosec
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode == SYSTEMD_UNIT_NOT_RUNNING_CODE:
+            return DaemonStatus(running=False, status=exc.stdout.decode("utf-8"))
         raise DaemonError("Failed to check tmate-ssh-server status.") from exc
-    except TimeoutError as exc:
-        raise DaemonError("Timed out waiting for tmate service status.") from exc
+
+    return DaemonStatus(running=True, status=status_str.decode("utf-8"))
 
 
 def start_daemon(address: str) -> None:

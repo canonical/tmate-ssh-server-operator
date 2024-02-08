@@ -145,10 +145,10 @@ def test__on_update_status_ip_not_assigned(
     act: when _on_update_status is called.
     assert: the charm returns and calls no other functions.
     """
-    is_running_mock = MagicMock(return_value=True)
+    status_mock = MagicMock(return_value=tmate.DaemonStatus(running=True, status=""))
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
-    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "status", status_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
@@ -159,7 +159,7 @@ def test__on_update_status_ip_not_assigned(
     mock_event = MagicMock(spec=ops.UpdateStatusEvent)
     charm._on_update_status(mock_event)
 
-    is_running_mock.assert_not_called()
+    status_mock.assert_not_called()
     start_daemon_mock.assert_not_called()
     remove_stopped_containers_mock.assert_not_called()
 
@@ -170,22 +170,23 @@ def test__on_update_status_error(
 ):
     """
     arrange: given multiple scenarios.
-      1. a monkeypatched tmate.is_running that raises an error.
-      2. a monkeypatched tmate.is_running that returns False and start_daemon that raises an error.
+      1. a monkeypatched tmate.status that raises an error.
+      2. a monkeypatched tmate.status that returns False for running and
+       start_daemon that raises an error.
     act: when _on_update_status is called.
     assert: the errors are not caught
     """
-    # 1. tmate.is_running raises an error
-    is_running_mock = MagicMock(side_effect=tmate.DaemonError)
+    # 1. tmate.status raises an error
+    status_mock = MagicMock(side_effect=tmate.DaemonError)
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
-    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "status", status_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
 
     with pytest.raises(tmate.DaemonError):
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
-    # 2. tmate.is_running returns False and start_daemon raises an error
-    is_running_mock.side_effect = [False]
+    # 2. tmate.is_running returns False for running and start_daemon raises an error
+    status_mock.side_effect = [tmate.DaemonStatus(running=False, status="")]
     start_daemon_mock.side_effect = tmate.DaemonError
 
     with pytest.raises(tmate.DaemonError):
@@ -202,7 +203,9 @@ def test__on_update_status_remove_stopped_containers_error(
     act: when _on_update_status is called.
     assert: the exception is caught and logged.
     """
-    monkeypatch.setattr(tmate, "is_running", MagicMock(return_value=False))
+    monkeypatch.setattr(
+        tmate, "status", MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
+    )
     monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
     monkeypatch.setattr(
         tmate, "remove_stopped_containers", MagicMock(side_effect=tmate.DockerError)
@@ -218,15 +221,15 @@ def test__on_update_status_restart_daemon(
     charm: TmateSSHServerOperatorCharm,
 ):
     """
-    arrange: given a monkeypatched tmate.is_running which returns False.
+    arrange: given a monkeypatched tmate.status which returns False for running.
     act: when _on_update_status is called.
     assert: status is set to active, tmate ssh server is restarted and
         stopped docker containers are removed.
     """
-    is_running_mock = MagicMock(return_value=False)
+    status_mock = MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
-    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "status", status_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
@@ -247,10 +250,10 @@ def test__on_update_status_everything_ok(
     assert: status is set to active, tmate ssh server is not restarted and
         stopped docker containers are not removed.
     """
-    is_running_mock = MagicMock(return_value=True)
+    status_mock = MagicMock(return_value=tmate.DaemonStatus(running=True, status=""))
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
-    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "status", status_mock)
     monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
