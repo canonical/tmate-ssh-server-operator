@@ -91,17 +91,6 @@ Configuration for accessing Jenkins through proxy.
 
 ---
 
-#### <kbd>property</kbd> model_computed_fields
-
-Get the computed fields of this model instance. 
-
-
-
-**Returns:**
-  A dictionary of computed field names and their corresponding `ComputedFieldInfo` objects. 
-
----
-
 #### <kbd>property</kbd> model_extra
 
 Get extra fields set during validation. 
