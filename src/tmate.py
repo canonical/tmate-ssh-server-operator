@@ -196,7 +196,7 @@ def is_running() -> bool:
 
 
 def start_daemon(address: str) -> None:
-    """Install unit files and start daemon.
+    """Install unit files, enable and start daemon.
 
     Args:
         address: The IP address to bind to.
@@ -214,6 +214,7 @@ def start_daemon(address: str) -> None:
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
+        systemd.service_enable(TMATE_SERVICE_NAME)
         systemd.service_start(TMATE_SERVICE_NAME)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
