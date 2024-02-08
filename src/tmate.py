@@ -61,6 +61,7 @@ class DaemonError(Exception):
 class DaemonStartError(DaemonError):
     """Represents an error while starting tmate-ssh-server daemon."""
 
+
 class DaemonStatusError(DaemonError):
     """Represents an error while checking the status of tmate-ssh-server daemon."""
 
@@ -71,6 +72,10 @@ class IncompleteInitError(Exception):
 
 class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
+
+
+class ContainerStopError(Exception):
+    """Represents an error while stopping a container."""
 
 
 def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
@@ -178,6 +183,9 @@ def is_running() -> bool:
 
     Returns:
         True if the tmate-ssh-server service is running, False otherwise.
+
+    Raises:
+        DaemonStatusError: if there was an error checking the status of tmate-ssh-server.
     """
     try:
         return systemd.service_running(TMATE_SERVICE_NAME)

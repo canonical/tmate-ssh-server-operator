@@ -134,3 +134,64 @@ def test__on_install(
 
     assert ops.Port(protocol="tcp", port=tmate.PORT) in charm.unit.opened_ports()
     assert charm.unit.status.name == "active"
+
+
+def test__on_update_status_error(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given multiple scenarios.
+      1. a monkeypatched tmate.is_running that raises an error.
+      2. a monkeypatched tmate.is_running that returns False and start_daemon that raises an error.
+    act: when _on_update_status is called.
+    assert: the errors are not caught
+    """
+    # 1. tmate.is_running raises an error
+    is_running_mock = MagicMock(side_effect=tmate.DaemonStatusError)
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+
+    with pytest.raises(tmate.DaemonStatusError):
+        charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+    # 2. tmate.is_running returns False and start_daemon raises an error
+    is_running_mock.side_effect = [False]
+    start_daemon_mock.side_effect = tmate.DaemonStartError
+
+    with pytest.raises(tmate.DaemonStartError):
+        charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+
+def test__on_update_status(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given multiple scenarios.
+        1. a monkeypatched tmate.is_running which returns False.
+        2. a monkeypatched tmate.is_running which returns True.
+    act: when _on_update_status is called.
+    assert:
+        1. tmate ssh server is restarted.
+        2. tmate ssh server is not restarted.
+    """
+    is_running_mock = MagicMock(return_value=False)
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    monkeypatch.setattr(tmate, "is_running", is_running_mock)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+
+    # 1. tmate ssh server is restarted
+    charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+    start_daemon_mock.assert_called_once()
+    assert charm.unit.status.name == "active"
+
+    # 2. tmate ssh server is not restarted
+    is_running_mock.return_value = True
+    start_daemon_mock.reset_mock()
+
+    charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+    start_daemon_mock.assert_not_called()
+    assert charm.unit.status.name == "active"

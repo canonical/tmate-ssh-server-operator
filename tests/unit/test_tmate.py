@@ -203,18 +203,12 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
 
 def test_is_running(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched systemd call that returns
-      1. True
-      2. False
+    arrange: given a monkeypatched systemd call.
     act: when is_running is called.
-    assert:
-      1. True is returned.
-      2. False is returned.
+    assert: the output of the systemd call is returned.
     """
     service_running_mock = MagicMock(spec=tmate.systemd.service_running, return_value=True)
-    monkeypatch.setattr(
-        tmate.systemd, "service_running", service_running_mock
-    )
+    monkeypatch.setattr(tmate.systemd, "service_running", service_running_mock)
 
     # 1. True is returned.
     assert tmate.is_running()
@@ -226,16 +220,14 @@ def test_is_running(monkeypatch: pytest.MonkeyPatch):
 
 def test_is_running_error(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched systemd call that raises
-     1. SystemdError
-     2. TimeoutError
+    arrange: given a monkeypatched systemd call that raises errors.
     act: when is_running is called.
     assert: DaemonStatusError is raised in both cases
     """
-    service_running_mock = MagicMock(spec=tmate.systemd.service_running, side_effect=tmate.systemd.SystemdError)
-    monkeypatch.setattr(
-        tmate.systemd, "service_running", service_running_mock
+    service_running_mock = MagicMock(
+        spec=tmate.systemd.service_running, side_effect=tmate.systemd.SystemdError
     )
+    monkeypatch.setattr(tmate.systemd, "service_running", service_running_mock)
 
     # 1. SystemdError is raised.
     with pytest.raises(tmate.DaemonStatusError) as exc:
@@ -352,12 +344,14 @@ def test_get_fingerprints(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "RSA_PUB_KEY_PATH", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "ED25519_PUB_KEY_PATH", MagicMock(spec=Path))
+    rsa_fingerprint = "rsa"
+    ed25519_fingerprint = "ed25519"
     monkeypatch.setattr(
         tmate,
         "_calculate_fingerprint",
         MagicMock(
             spec=tmate._calculate_fingerprint,
-            side_effect=[(rsa_fingerprint := "rsa"), (ed25519_fingerprint := "ed25519")],
+            side_effect=[(rsa_fingerprint), (ed25519_fingerprint)],
         ),
     )
 

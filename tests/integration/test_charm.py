@@ -96,7 +96,9 @@ async def test_ssh_connection(
     assert "test" in stdout, f"Failed to write with ssh command, {stdout}"
 
 
-async def test_restart_of_inactive_service(ops_test: OpsTest, unit: Unit, tmate_ssh_server: Application):
+async def test_restart_of_inactive_service(
+    ops_test: OpsTest, unit: Unit, tmate_ssh_server: Application
+):
     """
     arrange: given a tmate-ssh-server charm unit.
     act: kill the docker process containing the service and

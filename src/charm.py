@@ -33,6 +33,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.sshdebug = ssh_debug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _on_install(self, event: ops.InstallEvent) -> None:
         """Install and start tmate-ssh-server.
@@ -80,6 +81,15 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:
+        """Check the health of the workload and restart if necessary."""
+        if not tmate.is_running():
+            logger.error("tmate-ssh-server is not running. Will restart.")
+
+            tmate.start_daemon(address=str(self.state.ip_addr))
+
         self.unit.status = ops.ActiveStatus()
 
 
