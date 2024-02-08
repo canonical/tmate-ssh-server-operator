@@ -7,8 +7,10 @@ import secrets
 from pathlib import Path
 
 import paramiko
+from juju.application import Application
 from juju.machine import Machine
 from juju.unit import Unit
+from ops import ActiveStatus
 from pytest_operator.plugin import OpsTest
 
 from tmate import PORT
@@ -94,7 +96,7 @@ async def test_ssh_connection(
     assert "test" in stdout, f"Failed to write with ssh command, {stdout}"
 
 
-async def test_restart_of_inactive_service(ops_test: OpsTest, unit: Unit):
+async def test_restart_of_inactive_service(ops_test: OpsTest, unit: Unit, tmate_ssh_server: Application):
     """
     arrange: given a tmate-ssh-server charm unit.
     act: kill the docker process containing the service and
@@ -111,7 +113,7 @@ async def test_restart_of_inactive_service(ops_test: OpsTest, unit: Unit):
     assert retcode != 0, "tmate-ssh-server service is still running"
 
     async with ops_test.fast_forward():
-        await unit.model.wait_for_idle(idle_period=30, apps=[unit.app.name], status="active")
+        await unit.model.wait_for_idle(apps=[tmate_ssh_server.name], status=ActiveStatus.name)
 
     (retcode, stdout, stderr) = await ops_test.juju(
         "ssh", unit.entity_id, "--", "systemctl status --quiet is-active tmate-ssh-server"
