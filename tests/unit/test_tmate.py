@@ -201,6 +201,54 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
 
 
+def test_is_running(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched systemd call that returns
+      1. True
+      2. False
+    act: when is_running is called.
+    assert:
+      1. True is returned.
+      2. False is returned.
+    """
+    service_running_mock = MagicMock(spec=tmate.systemd.service_running, return_value=True)
+    monkeypatch.setattr(
+        tmate.systemd, "service_running", service_running_mock
+    )
+
+    # 1. True is returned.
+    assert tmate.is_running()
+
+    # 2. False is returned.
+    service_running_mock.return_value = False
+    assert not tmate.is_running()
+
+
+def test_is_running_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched systemd call that raises
+     1. SystemdError
+     2. TimeoutError
+    act: when is_running is called.
+    assert: DaemonStatusError is raised in both cases
+    """
+    service_running_mock = MagicMock(spec=tmate.systemd.service_running, side_effect=tmate.systemd.SystemdError)
+    monkeypatch.setattr(
+        tmate.systemd, "service_running", service_running_mock
+    )
+
+    # 1. SystemdError is raised.
+    with pytest.raises(tmate.DaemonStatusError) as exc:
+        tmate.is_running()
+    assert "Failed to check tmate-ssh-server status." in str(exc.value)
+
+    # 2. TimeoutError is raised.
+    service_running_mock.side_effect = TimeoutError
+    with pytest.raises(tmate.DaemonStatusError) as exc:
+        tmate.is_running()
+    assert "Timed out waiting for tmate service status." in str(exc.value)
+
+
 def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.

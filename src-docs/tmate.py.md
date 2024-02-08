@@ -16,7 +16,7 @@ Configurations and functions to operate tmate-ssh-server.
 
 ---
 
-<a href="../src/tmate.py#L102"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L109"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `install_dependencies`
 
@@ -41,7 +41,7 @@ Install dependenciese required to start tmate-ssh-server container.
 
 ---
 
-<a href="../src/tmate.py#L119"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L126"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `install_keys`
 
@@ -66,12 +66,12 @@ Install key creation script and generate keys.
 
 ---
 
-<a href="../src/tmate.py#L169"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L176"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
-## <kbd>function</kbd> `status`
+## <kbd>function</kbd> `is_running`
 
 ```python
-status() → bool
+is_running() → bool
 ```
 
 Check if the tmate-ssh-server service is running. 
@@ -84,7 +84,7 @@ Check if the tmate-ssh-server service is running.
 
 ---
 
-<a href="../src/tmate.py#L178"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L190"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `start_daemon`
 
@@ -109,7 +109,7 @@ Install unit files and start daemon.
 
 ---
 
-<a href="../src/tmate.py#L232"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L244"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `get_fingerprints`
 
@@ -133,7 +133,7 @@ Get fingerprint from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L256"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L268"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `generate_tmate_conf`
 
@@ -163,8 +163,26 @@ Generate the .tmate.conf values from generated keys.
 
 ---
 
+## <kbd>class</kbd> `DaemonError`
+Represents an error with the tmate-ssh-server daemon. 
+
+
+
+
+
+---
+
 ## <kbd>class</kbd> `DaemonStartError`
 Represents an error while starting tmate-ssh-server daemon. 
+
+
+
+
+
+---
+
+## <kbd>class</kbd> `DaemonStatusError`
+Represents an error while checking the status of tmate-ssh-server daemon. 
 
 
 

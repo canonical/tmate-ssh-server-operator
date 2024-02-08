@@ -54,8 +54,15 @@ class KeyInstallError(Exception):
     """Represents an error while installing/generating key files."""
 
 
-class DaemonStartError(Exception):
+class DaemonError(Exception):
+    """Represents an error with the tmate-ssh-server daemon."""
+
+
+class DaemonStartError(DaemonError):
     """Represents an error while starting tmate-ssh-server daemon."""
+
+class DaemonStatusError(DaemonError):
+    """Represents an error while checking the status of tmate-ssh-server daemon."""
 
 
 class IncompleteInitError(Exception):
@@ -164,6 +171,20 @@ def _wait_for(
     if func():
         return
     raise TimeoutError()
+
+
+def is_running() -> bool:
+    """Check if the tmate-ssh-server service is running.
+
+    Returns:
+        True if the tmate-ssh-server service is running, False otherwise.
+    """
+    try:
+        return systemd.service_running(TMATE_SERVICE_NAME)
+    except systemd.SystemdError as exc:
+        raise DaemonStatusError("Failed to check tmate-ssh-server status.") from exc
+    except TimeoutError as exc:
+        raise DaemonStatusError("Timed out waiting for tmate service status.") from exc
 
 
 def start_daemon(address: str) -> None:
