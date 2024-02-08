@@ -90,6 +90,12 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
             tmate.start_daemon(address=str(self.state.ip_addr))
 
+            logger.info("Removing stopped containers.")
+            try:
+                tmate.remove_stopped_containers()
+            except tmate.DockerError:
+                logger.exception("Failed to remove stopped containers.")
+
         self.unit.status = ops.ActiveStatus()
 
 

@@ -169,11 +169,21 @@ Generate the .tmate.conf values from generated keys.
 
 ---
 
-## <kbd>class</kbd> `ContainerStopError`
-Represents an error while stopping a container. 
+<a href="../src/tmate.py#L303"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+## <kbd>function</kbd> `remove_stopped_containers`
+
+```python
+remove_stopped_containers() → None
+```
+
+Remove all stopped containers. 
 
 
 
+**Raises:**
+ 
+ - <b>`DockerError`</b>:  if there was an error removing stopped containers. 
 
 
 ---
@@ -207,6 +217,15 @@ Represents an error while checking the status of tmate-ssh-server daemon.
 
 ## <kbd>class</kbd> `DependencySetupError`
 Represents an error while installing and setting up dependencies. 
+
+
+
+
+
+---
+
+## <kbd>class</kbd> `DockerError`
+Represents an error using a docker command. 
 
 
 

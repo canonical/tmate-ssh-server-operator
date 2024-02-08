@@ -74,8 +74,8 @@ class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
 
 
-class ContainerStopError(Exception):
-    """Represents an error while stopping a container."""
+class DockerError(Exception):
+    """Represents an error using a docker command."""
 
 
 def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
@@ -298,3 +298,15 @@ def generate_tmate_conf(host: str) -> str:
         set -g tmate-server-ed25519-fingerprint {fingerprints.ed25519}
         """
     )
+
+
+def remove_stopped_containers() -> None:
+    """Remove all stopped containers.
+
+    Raises:
+        DockerError: if there was an error removing stopped containers.
+    """
+    try:
+        subprocess.check_call(["docker", "container", "prune", "-f"])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DockerError("Failed to remove stopped containers.") from exc
