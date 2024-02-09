@@ -196,6 +196,7 @@ def status() -> DaemonStatus:
         DaemonError: if there was an error checking the status of tmate-ssh-server.
     """
     try:
+        # Input to subprocess.check_output is trusted, as it is not user input.
         status_str = subprocess.check_output(["systemctl", "status", TMATE_SERVICE_NAME])  # nosec
     except subprocess.CalledProcessError as exc:
         if exc.returncode == SYSTEMD_UNIT_NOT_RUNNING_CODE:
