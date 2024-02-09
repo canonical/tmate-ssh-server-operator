@@ -13,10 +13,11 @@ Configurations and functions to operate tmate-ssh-server.
 - **USER**
 - **GROUP**
 - **PORT**
+- **SYSTEMD_UNIT_NOT_RUNNING_CODE**
 
 ---
 
-<a href="../src/tmate.py#L102"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L122"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `install_dependencies`
 
@@ -41,7 +42,7 @@ Install dependenciese required to start tmate-ssh-server container.
 
 ---
 
-<a href="../src/tmate.py#L119"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L139"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `install_keys`
 
@@ -66,7 +67,31 @@ Install key creation script and generate keys.
 
 ---
 
-<a href="../src/tmate.py#L169"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L189"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+## <kbd>function</kbd> `status`
+
+```python
+status() → DaemonStatus
+```
+
+Check the status of the tmate-ssh-server service. 
+
+
+
+**Returns:**
+  The status of the tmate-ssh-server daemon. 
+
+
+
+**Raises:**
+ 
+ - <b>`DaemonError`</b>:  if there was an error checking the status of tmate-ssh-server. 
+
+
+---
+
+<a href="../src/tmate.py#L209"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `start_daemon`
 
@@ -74,7 +99,7 @@ Install key creation script and generate keys.
 start_daemon(address: str) → None
 ```
 
-Install unit files and start daemon. 
+Install unit files, enable and start daemon. 
 
 
 
@@ -86,12 +111,12 @@ Install unit files and start daemon.
 
 **Raises:**
  
- - <b>`DaemonStartError`</b>:  if there was an error starting the tmate-ssh-server docker process. 
+ - <b>`DaemonError`</b>:  if there was an error starting the tmate-ssh-server docker process. 
 
 
 ---
 
-<a href="../src/tmate.py#L223"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L264"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `get_fingerprints`
 
@@ -115,7 +140,7 @@ Get fingerprint from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L247"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L288"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `generate_tmate_conf`
 
@@ -145,8 +170,43 @@ Generate the .tmate.conf values from generated keys.
 
 ---
 
-## <kbd>class</kbd> `DaemonStartError`
-Represents an error while starting tmate-ssh-server daemon. 
+<a href="../src/tmate.py#L315"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+
+## <kbd>function</kbd> `remove_stopped_containers`
+
+```python
+remove_stopped_containers() → None
+```
+
+Remove all stopped containers. 
+
+
+
+**Raises:**
+ 
+ - <b>`DockerError`</b>:  if there was an error removing stopped containers. 
+
+
+---
+
+## <kbd>class</kbd> `DaemonError`
+Represents an error with the tmate-ssh-server daemon. 
+
+
+
+
+
+---
+
+## <kbd>class</kbd> `DaemonStatus`
+The status of the tmate-ssh-server daemon. 
+
+
+
+**Attributes:**
+ 
+ - <b>`running`</b>:  True if the daemon is running, False otherwise. 
+ - <b>`status`</b>:  The status string of the daemon process. 
 
 
 
@@ -156,6 +216,15 @@ Represents an error while starting tmate-ssh-server daemon.
 
 ## <kbd>class</kbd> `DependencySetupError`
 Represents an error while installing and setting up dependencies. 
+
+
+
+
+
+---
+
+## <kbd>class</kbd> `DockerError`
+Represents an error using a docker command. 
 
 
 

@@ -33,6 +33,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.sshdebug = ssh_debug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _on_install(self, event: ops.InstallEvent) -> None:
         """Install and start tmate-ssh-server.
@@ -43,7 +44,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         Raises:
             DependencyInstallError: if the dependencies required to start charm has failed.
             KeyInstallError: if the ssh-key installation and fingerprint generation failed.
-            DaemonStartError: if the workload daemon was unable to start.
+            DaemonError: if the workload daemon was unable to start.
         """
         if not self.state.ip_addr:
             logger.warning("Unit address not assigned.")
@@ -68,7 +69,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         try:
             self.unit.status = ops.MaintenanceStatus("Starting tmate-ssh-server daemon.")
             tmate.start_daemon(address=str(self.state.ip_addr))
-        except tmate.DaemonStartError as exc:
+        except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
 
@@ -80,6 +81,29 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:
+        """Check the health of the workload and restart if necessary."""
+        if not self.state.ip_addr:
+            logger.warning("Unit address not assigned. Stop further execution of the hook.")
+            return
+
+        if not (tmate_status := tmate.status()).running:
+            logger.error("tmate-ssh-server is not running:\n %s", tmate_status.status)
+
+            logger.info("Will restart tmate-ssh-server daemon.")
+
+            tmate.start_daemon(address=str(self.state.ip_addr))
+
+            logger.info("Removing stopped containers.")
+            try:
+                tmate.remove_stopped_containers()
+            except tmate.DockerError:
+                logger.exception("Failed to remove stopped containers.")
+        else:
+            logger.debug("tmate-ssh-server is running:\n %s", tmate_status.status)
+
         self.unit.status = ops.ActiveStatus()
 
 

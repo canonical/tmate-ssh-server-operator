@@ -43,6 +43,9 @@ GROUP = "ubuntu"
 
 PORT = 10022
 
+# systemd exit codes: https://refspecs.linuxbase.org/LSB_3.0.0/LSB-PDA/LSB-PDA/iniscrptact.html
+SYSTEMD_UNIT_NOT_RUNNING_CODE = 3
+
 logger = logging.getLogger(__name__)
 
 
@@ -54,8 +57,8 @@ class KeyInstallError(Exception):
     """Represents an error while installing/generating key files."""
 
 
-class DaemonStartError(Exception):
-    """Represents an error while starting tmate-ssh-server daemon."""
+class DaemonError(Exception):
+    """Represents an error with the tmate-ssh-server daemon."""
 
 
 class IncompleteInitError(Exception):
@@ -64,6 +67,23 @@ class IncompleteInitError(Exception):
 
 class FingerprintError(Exception):
     """Represents an error with generating fingerprints from public keys."""
+
+
+class DockerError(Exception):
+    """Represents an error using a docker command."""
+
+
+@dataclasses.dataclass
+class DaemonStatus:
+    """The status of the tmate-ssh-server daemon.
+
+    Attributes:
+        running: True if the daemon is running, False otherwise.
+        status: The status string of the daemon process.
+    """
+
+    running: bool
+    status: str
 
 
 def _setup_docker(proxy_config: typing.Optional[state.ProxyConfig] = None) -> None:
@@ -166,14 +186,34 @@ def _wait_for(
     raise TimeoutError()
 
 
+def status() -> DaemonStatus:
+    """Check the status of the tmate-ssh-server service.
+
+    Returns:
+        The status of the tmate-ssh-server daemon.
+
+    Raises:
+        DaemonError: if there was an error checking the status of tmate-ssh-server.
+    """
+    try:
+        # Input to subprocess.check_output is trusted, as it is not user input.
+        status_str = subprocess.check_output(["systemctl", "status", TMATE_SERVICE_NAME])  # nosec
+    except subprocess.CalledProcessError as exc:
+        if exc.returncode == SYSTEMD_UNIT_NOT_RUNNING_CODE:
+            return DaemonStatus(running=False, status=exc.stdout.decode("utf-8"))
+        raise DaemonError("Failed to check tmate-ssh-server status.") from exc
+
+    return DaemonStatus(running=True, status=status_str.decode("utf-8"))
+
+
 def start_daemon(address: str) -> None:
-    """Install unit files and start daemon.
+    """Install unit files, enable and start daemon.
 
     Args:
         address: The IP address to bind to.
 
     Raises:
-        DaemonStartError: if there was an error starting the tmate-ssh-server docker process.
+        DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
@@ -185,12 +225,13 @@ def start_daemon(address: str) -> None:
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
+        systemd.service_enable(TMATE_SERVICE_NAME)
         systemd.service_start(TMATE_SERVICE_NAME)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
-        raise DaemonStartError("Failed to start tmate-ssh-server daemon.") from exc
+        raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
-        raise DaemonStartError("Timed out waiting for tmate service to start.") from exc
+        raise DaemonError("Timed out waiting for tmate service to start.") from exc
 
 
 @dataclasses.dataclass
@@ -269,3 +310,15 @@ def generate_tmate_conf(host: str) -> str:
         set -g tmate-server-ed25519-fingerprint {fingerprints.ed25519}
         """
     )
+
+
+def remove_stopped_containers() -> None:
+    """Remove all stopped containers.
+
+    Raises:
+        DockerError: if there was an error removing stopped containers.
+    """
+    try:
+        subprocess.check_call(["docker", "container", "prune", "-f"])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DockerError("Failed to remove stopped containers.") from exc

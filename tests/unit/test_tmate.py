@@ -3,6 +3,8 @@
 
 """tmate-ssh-server charm tmate module unit tests."""
 
+# subprocess is used by tmate module. Security implications have been considered.
+import subprocess  # nosec
 import textwrap
 from pathlib import Path
 from tempfile import NamedTemporaryFile
@@ -174,11 +176,57 @@ def test__wait_for(monkeypatch: pytest.MonkeyPatch, timeout: int, interval: int)
     tmate._wait_for(mock_func, timeout=timeout, check_interval=interval)
 
 
+def test_status(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call which returns zero exit code.
+    act: when is_running is called.
+    assert: the output of the systemd call is returned.
+    """
+    subprocess_mock = MagicMock(spec=tmate.subprocess.check_output, return_value=b"active")
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
+
+    assert tmate.status() == tmate.DaemonStatus(running=True, status="active")
+
+
+def test_status_not_running(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call which returns unit not running exit code.
+    act: when is_running is called.
+    assert: the output of the systemd call is returned.
+    """
+    subprocess_mock = MagicMock(
+        spec=tmate.subprocess.check_output,
+        side_effect=subprocess.CalledProcessError(
+            tmate.SYSTEMD_UNIT_NOT_RUNNING_CODE, "test", output=b"inactive"
+        ),
+    )
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
+
+    assert tmate.status() == tmate.DaemonStatus(running=False, status="inactive")
+
+
+def test_status_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call that raises an error.
+        This error does not indicate that the service is not running.
+    act: when status is called.
+    assert: DaemonError is raised in both cases
+    """
+    subprocess_mock = MagicMock(
+        spec=tmate.subprocess.check_output, side_effect=subprocess.CalledProcessError(1, "test")
+    )
+    monkeypatch.setattr(tmate.subprocess, "check_output", subprocess_mock)
+
+    with pytest.raises(tmate.DaemonError) as exc:
+        tmate.status()
+    assert "Failed to check tmate-ssh-server status." in str(exc.value)
+
+
 def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched systemd call that raises SystemdError.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -195,7 +243,7 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
@@ -205,7 +253,7 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -218,6 +266,11 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
     )
     monkeypatch.setattr(
         tmate.systemd,
+        "service_enable",
+        MagicMock(spec=tmate.systemd.service_enable),
+    )
+    monkeypatch.setattr(
+        tmate.systemd,
         "service_start",
         MagicMock(spec=tmate.systemd.service_start),
     )
@@ -227,17 +280,47 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
         MagicMock(spec=tmate._wait_for, side_effect=TimeoutError),
     )
 
-    with pytest.raises(tmate.DaemonStartError) as exc:
+    with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Timed out waiting for tmate service to start." in str(exc.value)
 
 
+def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched systemd call that raises SystemdError.
+    act: when enable_daemon is called.
+    assert: DaemonError is raised.
+    """
+    monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(
+        tmate.systemd,
+        "daemon_reload",
+        MagicMock(spec=tmate.systemd.daemon_reload),
+    )
+    monkeypatch.setattr(
+        tmate.systemd,
+        "service_enable",
+        MagicMock(
+            spec=tmate.systemd.service_enable,
+            side_effect=[
+                tmate.systemd.SystemdError,
+            ],
+        ),
+    )
+
+    with pytest.raises(tmate.DaemonError):
+        tmate.start_daemon(address="test")
+
+
 def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    arrange: given a monkeypatched systemd that raises SystemdError.
     act: when start_daemon is called.
-    assert: DaemonStartError is raised.
+    assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
@@ -245,6 +328,11 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
     monkeypatch.setattr(
         tmate.systemd, "daemon_reload", MagicMock(spec=tmate.systemd.daemon_reload)
+    )
+    monkeypatch.setattr(
+        tmate.systemd,
+        "service_enable",
+        MagicMock(spec=tmate.systemd.service_enable),
     )
     monkeypatch.setattr(
         tmate.systemd,
@@ -257,7 +345,7 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
 
-    with pytest.raises(tmate.DaemonStartError):
+    with pytest.raises(tmate.DaemonError):
         tmate.start_daemon(address="test")
 
 
@@ -297,19 +385,21 @@ def test_get_fingerprints_incomplete_init_error(monkeypatch: pytest.MonkeyPatch)
 
 def test_get_fingerprints(monkeypatch: pytest.MonkeyPatch):
     """
-    arrange: given a monkeypatched subprocess.check_output calls.
+    arrange: given a monkeypatched _calculate_fingerprint method.
     act: when get_fingerprints is called.
     assert: Correct fingerprint data is returned.
     """
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "RSA_PUB_KEY_PATH", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "ED25519_PUB_KEY_PATH", MagicMock(spec=Path))
+    rsa_fingerprint = "rsa"
+    ed25519_fingerprint = "ed25519"
     monkeypatch.setattr(
         tmate,
         "_calculate_fingerprint",
         MagicMock(
             spec=tmate._calculate_fingerprint,
-            side_effect=[(rsa_fingerprint := "rsa"), (ed25519_fingerprint := "ed25519")],
+            side_effect=[(rsa_fingerprint), (ed25519_fingerprint)],
         ),
     )
 
@@ -362,3 +452,22 @@ def test_generate_tmate_conf(fingerprints: tmate.Fingerprints):
         )
         == tmate.generate_tmate_conf(host)
     )
+
+
+def test_remove_stopped_containers_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    act: when remove_stopped_containers is called.
+    assert: DockerError is raised.
+    """
+    monkeypatch.setattr(
+        tmate.subprocess,
+        "check_call",
+        MagicMock(
+            spec=tmate.subprocess.check_call,
+            side_effect=[tmate.subprocess.CalledProcessError(returncode=1, cmd="test")],
+        ),
+    )
+
+    with pytest.raises(tmate.DockerError):
+        tmate.remove_stopped_containers()
