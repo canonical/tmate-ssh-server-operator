@@ -187,10 +187,10 @@ def _wait_for(
 
 
 def status() -> DaemonStatus:
-    """Check if the tmate-ssh-server service is running.
+    """Check the status of the tmate-ssh-server service.
 
     Returns:
-        True if the tmate-ssh-server service is running, False otherwise.
+        The status of the tmate-ssh-server daemon.
 
     Raises:
         DaemonError: if there was an error checking the status of tmate-ssh-server.

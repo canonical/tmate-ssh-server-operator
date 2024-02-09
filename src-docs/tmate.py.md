@@ -75,12 +75,12 @@ Install key creation script and generate keys.
 status() → DaemonStatus
 ```
 
-Check if the tmate-ssh-server service is running. 
+Check the status of the tmate-ssh-server service. 
 
 
 
 **Returns:**
-  True if the tmate-ssh-server service is running, False otherwise. 
+  The status of the tmate-ssh-server daemon. 
 
 
 
@@ -91,7 +91,7 @@ Check if the tmate-ssh-server service is running.
 
 ---
 
-<a href="../src/tmate.py#L208"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L209"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `start_daemon`
 
@@ -116,7 +116,7 @@ Install unit files, enable and start daemon.
 
 ---
 
-<a href="../src/tmate.py#L263"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L264"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `get_fingerprints`
 
@@ -140,7 +140,7 @@ Get fingerprint from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L287"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L288"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `generate_tmate_conf`
 
@@ -170,7 +170,7 @@ Generate the .tmate.conf values from generated keys.
 
 ---
 
-<a href="../src/tmate.py#L314"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
+<a href="../src/tmate.py#L315"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a>
 
 ## <kbd>function</kbd> `remove_stopped_containers`
 
