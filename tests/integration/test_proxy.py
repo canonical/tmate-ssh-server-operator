@@ -33,7 +33,7 @@ async def test_proxy(
         }
     )
 
-    logger.info("Deplyoing tmate charm.")
+    logger.info("Deploying tmate charm.")
     app = await model.deploy(charm)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     unit: Unit = next(iter(app.units))
