@@ -1,0 +1,13 @@
+name: Trigger tmate
+
+on:
+  pull_request:
+
+jobs:
+  trigger-tmate:
+    runs-on: [self-hosted, large]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup tmate session
+      if: ${{ failure() }}
+      uses: canonical/action-tmate@main
