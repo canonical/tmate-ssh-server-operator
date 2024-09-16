@@ -9,7 +9,7 @@ them to collaborate, provide technical support, or demonstrate commands and proc
 real-time.
 
 This charm provides the tmate-ssh-server service, which is paired with the tmate client to provide
-a self-hosted ssh relay server.
+a self-hosted SSH relay server.
 
 For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
 straightforward through Juju's clean interface. Allowing machine relations to the
@@ -24,7 +24,7 @@ warmly welcomes community projects, contributions, suggestions, fixes and constr
 - [Code of conduct](https://ubuntu.com/community/code-of-conduct)
 - [Get support](https://discourse.charmhub.io/)
 - [Join our online chat](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
-- [Contribute](Contribute)
+- [Contribute](https://github.com/canonical/tmate-ssh-server-operator/blob/main/CONTRIBUTING.md)
 
 Thinking about using the tmate-ssh-server Operator for your next project?
 [Get in touch](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)!
