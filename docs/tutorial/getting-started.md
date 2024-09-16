@@ -25,7 +25,7 @@ To easily clean up the resources and to separate your workload from the contents
 it is recommended to set up a new model with the following command.
 
 ```
-$ juju add-model tmate-tutorial
+juju add-model tmate-tutorial
 ```
 
 ### Deploy the tmate-ssh-server charm
@@ -33,7 +33,7 @@ $ juju add-model tmate-tutorial
 Use the following command to deploy the tmate-ssh-server charm.
 
 ```
-$ juju deploy tmate-ssh-server
+juju deploy tmate-ssh-server
 ```
 
 ### Get the tmate configuration contents
@@ -42,12 +42,11 @@ To get the contents of `.tmate.conf` file to register a tmate client, use the `g
 action to retrieve the configuration details. Save the output contents into `.tmate.conf` file for
 later use.
 ```
-$ juju run tmate-ssh-server/0 get-server-config | grep -E set | sed 's/^[[:space:]]*//' > .tmate.conf
+juju run tmate-ssh-server/0 get-server-config | grep -E set | sed 's/^[[:space:]]*//' > .tmate.conf
 ```
 
 The output of .tmate.conf file generated from the command above will look something like the following:
 ```
-$ cat .tmate.conf
 set -g tmate-server-host <tmate-ssh-server-unit-ip>
 set -g tmate-server-port 10022
 set -g tmate-server-rsa-fingerprint <rsa-fingerprint>
@@ -59,10 +58,8 @@ set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 To imitate a tmate client, we can add a machine on Juju and install tmate.
 
 ```
-$ juju add-machine
-created machine 1
-
-$ juju ssh 1 -- "sudo apt update && sudo apt install -y tmate"
+juju add-machine
+juju ssh 1 -- "sudo apt update && sudo apt install -y tmate"
 ```
 
 Copy the .tmate.conf file retrieved from the
@@ -73,27 +70,26 @@ Then, register the public key of the current machine (use `ssh-keygen` to genera
 none exist yet).
 
 ```
-$ juju scp .tmate.conf 1:~/.tmate.conf
-$ juju ssh 1 -- "echo $(~/.ssh/id_rsa.pub) >> ~/.ssh/authorized_keys"
+juju scp .tmate.conf 1:~/.tmate.conf
+juju ssh 1 -- "echo $(~/.ssh/id_rsa.pub) >> ~/.ssh/authorized_keys"
 ```
 
 Start the tmate client & get the ssh command.
 ```
 # start a new tmate session
-$ juju ssh 1 -- "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session -d"
+juju ssh 1 -- "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session -d"
 # wait until the tmate session is ready
-$ juju ssh 1 -- "tmate -S /tmp/tmate.sock wait tmate-ready"
+juju ssh 1 -- "tmate -S /tmp/tmate.sock wait tmate-ready"
 # print tmate ssh details
-$ juju ssh 1 -- "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
-ssh -p10022 <user>@0.0.0.0
+juju ssh 1 -- "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
+# output looks something like ssh -p10022 <user>@0.0.0.0
 ```
 
 ### SSH into the tmate terminal
 
-Use `juju status` command to find out the unit ip address.
+Run `juju status` command to find out the unit IP address.
 
 ```
-$ juju status
 Model           Controller  Cloud/Region         Version  SLA          Timestamp
 tmate-tutorial  localhost   localhost/localhost  3.1.6    unsupported  <timestamp>
 
@@ -112,8 +108,12 @@ Then use the ssh command output from the previous step and replace `0.0.0.0` add
 IP of tmate-ssh-server unit.
 
 ```
-$ ssh <user>@<unit-ip>
+ssh <user>@<unit-ip>
+```
 
+The output will look something like the following:
+
+```
 Tip: if you wish to use tmate only for remote access, run: tmate -F
 To see the following messages again, run in a tmate session: tmate show-messages
 Press <q> or <ctrl-c> to continue
@@ -125,13 +125,13 @@ ssh session: ssh -p10022 <user>@<unit-ip>
 ```
 
 
-### Cleaning up the environment
+### Clean up the environment
 
 Congratulations! You have successfully finished the tmate-ssh-server tutorial. You can now remove
 the `.tmate.conf` file and the juju model environment that you’ve created using the following
 command.
 
 ```
-$ rm .tmate.conf
-$ juju destroy-model tmate-tutorial -y
+rm .tmate.conf
+juju destroy-model tmate-tutorial -y
 ```
