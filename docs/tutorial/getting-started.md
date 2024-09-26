@@ -1,4 +1,4 @@
-# Getting Started
+# Deploy the tmate-ssh-server charm for the first time
 
 ## What you'll do
 
