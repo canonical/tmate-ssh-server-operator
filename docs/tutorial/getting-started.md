@@ -1,4 +1,4 @@
-# Getting Started
+# Deploy the tmate-ssh-server charm for the first time
 
 ## What you'll do
 
@@ -12,13 +12,14 @@ others in real-time, making it easy to collaborate, troubleshoot, and provide su
 different systems and networks. It provides a seamless way to establish SSH connections and enables
 remote access without requiring complex network configurations.
 
-### Prerequisites
+## Requirements
 
 To deploy a tmate-ssh-server charm, you will need a Juju controller bootstrapped with any machine
 controller type.
 To see how to bootstrap your Juju installation with LXD, please refer to the documentation
 on LXD [installation](https://juju.is/docs/juju/lxd).
 
+## Steps
 ### Set up the tutorial model
 
 To easily clean up the resources and to separate your workload from the contents of this tutorial,
