@@ -1,45 +1,63 @@
-# tmate-ssh-server-operator
+# Tmate SSH server operator
+<!-- Use this space for badges -->
 
-A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
-deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an
-open source terminal multiplexer, providing instant terminal sharing capabilities.
+A Juju charm that provides the self-hosted GitHub runner an integration with self-hosted SSH debug
+server. The self-hosted SSH debug server is automatically available via the forked version of 
+[action-tmate](https://github.com/canonical/action-tmate). By default, the connection is allowed
+only for the actor of the debug workflow for security considerations. This charm is deployed as a
+VM.
 
-Tmate enables users to share their terminal session with other users over the internet, allowing
-them to collaborate, provide technical support, or demonstrate commands and procedures in
-real-time.
+Like any Juju charm, this charm supports one-line deployment, integration, scaling, and more. For
+Charmed Tmate SSH server, there are no configurations required and the charm works out of the box.
 
-This charm provides a tmate-ssh-server service, and when paired with the tmate client provides a
-self-hosted ssh relay server.
+For information about how to deploy, integrate, and manage this charm, see the Official 
+[CharmHub Documentation](https://charmhub.io/tmate-ssh-server).
 
-For DevOps and SRE teams, this charm will make operating self hosted tmate-ssh-server simple and
-straightforward through Juju's clean interface. Allowing machine relations to the
-[Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the running
-machines.
+## Get started
+<!--Briefly summarize what the user will achieve in this guide.-->
+Deploy Tmate SSH server with GitHub runners.
 
+<!--Indicate software and hardware prerequisites-->
+You'll need a working [OpenStack installation](https://microstack.run/docs/single-node) to deploy
+the GitHub runners on.
+
+### Set up
+
+Follow [MicroStack's single-node](https://microstack.run/docs/single-node) starting guide to set 
+up MicroStack.
+
+Follow the [tutorial on GitHub runner](https://charmhub.io/github-runner) to deploy the GitHub
+runner.
+
+### Deploy
+
+Deploy the charm.
+
+```
+juju deploy tmate-ssh-server
+
+juju integrate tmate-ssh-server github-runner
+```
+
+### Basic operations
+<!--Brief walkthrough of performing standard configurations or operations-->
+
+After having deployed and integrated the charm with the GitHub runner charm, the SSH connection to
+the runner VM should be accessible via [action-tmate](https://github.com/canonical/action-tmate).
+To find out more about how to configure the workflow, refer to the [Getting Started](https://github.com/canonical/action-tmate?tab=readme-ov-file#getting-started) section of action tmate.
+
+## Integrations
+<!-- Information about particularly relevant interfaces, endpoints or libraries related to the charm. For example, peer relation endpoints required by other charms for integration.--> 
+* debug-ssh: Provides GitHub runners with addresses to connect to for action-tmate.
+
+For a full list, please refer to the full list on [CharmHub](https://charmhub.io/tmate-ssh-server/integrations).
+
+## Learn more
+* [Read more](https://charmhub.io/tmate-ssh-server) <!--Link to the charm's official documentation-->
+* [Developer documentation](https://github.com/canonical/tmate-ssh-server-operator/blob/main/CONTRIBUTING.md) <!--Link to any developer documentation-->
+* [Troubleshooting](https://matrix.to/#/!DYvOMMMjuXPZRJYHdy:ubuntu.com?via=ubuntu.com&via=matrix.org)
 
 ## Project and community
-
-The tmate-ssh-server Operator is a member of the Ubuntu family. It's an open source
-project that warmly welcomes community projects, contributions, suggestions,
-fixes and constructive feedback.
-* [Code of conduct](https://ubuntu.com/community/code-of-conduct)
-* [Get support](https://discourse.charmhub.io/)
-* [Join our online chat](https://matrix.to/#/#charmhub-charmdev:ubuntu.com)
-* [Contribute](https://charmhub.io/tmate-ssh-server/docs/contributing)
-* [Getting Started](https://charmhub.io/tmate-ssh-server/docs/getting-started)
-Thinking about using the tmate-ssh-server Operator for your next project? 
-[Get in touch](https://chat.charmhub.io/charmhub/channels/charm-dev)!
-
----
-
-For further details,
-[see the charm's detailed documentation](https://charmhub.io/tmate-ssh-server/docs).
-
-## Generating src docs for every commit
-
-Run the following command:
-
-```bash
-echo -e "tox -e src-docs\ngit add src-docs\n" >> .git/hooks/pre-commit
-chmod +x .git/hooks/pre-commit
-```
+* [Issues](https://github.com/canonical/tmate-ssh-server-operator/issues) <!--Link to GitHub issues (if applicable)-->
+* [Contributing](https://github.com/canonical/tmate-ssh-server-operator/blob/main/CONTRIBUTING.md) <!--Link to any contribution guides--> 
+* [Matrix](https://matrix.to/#/!DYvOMMMjuXPZRJYHdy:ubuntu.com?via=ubuntu.com&via=matrix.org) <!--Link to contact info (if applicable), e.g. Matrix channel-->
