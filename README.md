@@ -50,7 +50,7 @@ To find out more about how to configure the workflow, refer to the [Getting Star
 <!-- Information about particularly relevant interfaces, endpoints or libraries related to the charm. For example, peer relation endpoints required by other charms for integration.--> 
 * debug-ssh: Provides GitHub runners with addresses to connect to for action-tmate.
 
-For a full list, please refer to the full list on [CharmHub](https://charmhub.io/tmate-ssh-server/integrations).
+For a full list of integrations, please refer to the [Charmhub documentation](https://charmhub.io/github-runner-image-builder/integrations).
 
 ## Learn more
 * [Read more](https://charmhub.io/tmate-ssh-server) <!--Link to the charm's official documentation-->
