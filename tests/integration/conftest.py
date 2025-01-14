@@ -87,7 +87,8 @@ async def machine_fixture(model: Model, ops_test: OpsTest):
             True if the machine is running, False otherwise.
         """
         status: FullStatus = await model.get_status()
-        machine_status: MachineStatus = status.machines[machine.entity_id]
+        # Mypy is not able to deduce type "MachineStatus" but it think it is of type "Type"
+        machine_status: MachineStatus | None = status.machines[machine.entity_id]  # type: ignore
         assert machine_status, f"Failed to get machine {machine.entity_id}"
         # mypy incorrectly assumes dict[Any, Any] | DetailedStatus.
         instance_status = typing.cast(DetailedStatus, machine_status.instance_status)
