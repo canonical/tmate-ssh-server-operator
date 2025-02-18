@@ -41,7 +41,8 @@ def test_install_dependencies_proxy_config(monkeypatch: pytest.MonkeyPatch):
             "DOCKER_DAEMON_CONFIG_PATH",
             (tmp_file_path := Path(temporary_docker_daemon_file.name)),
         )
-        tmate.install_dependencies(proxy_config=proxy_config)
+        # ProxyConfigFactory is not considered as ProxyConfig for mypy
+        tmate.install_dependencies(proxy_config=proxy_config)  # type: ignore
 
         assert f"""{{
   "proxies": {{
