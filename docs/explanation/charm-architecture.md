@@ -11,17 +11,17 @@ via integration data.
 
 ```mermaid
 C4Container
-title Container diagram for Tmate SSH Server
+title Container diagram for tmate SSH Server
 
 
- Container_Boundary(c1, "Tmate SSH Server") {
-    Container(tmatessh, "Tmate SSH Server", "", "Provides sharing a remote session")
+ Container_Boundary(c1, "tmate SSH Server") {
+    Container(tmatessh, "tmate SSH Server", "", "Provides sharing a remote session")
  }
-Container_Boundary(c2, "Tmate Client Charm") {
-    Container(clientcharm, "Tmate Client Charm", "", "Charm managing Tmate Client workload.")
+Container_Boundary(c2, "tmate Client Charm") {
+    Container(clientcharm, "tmate Client Charm", "", "Charm managing tmate client workload.")
  }
 
-    System_Ext(tmateclient, "Tmate Client", "Client that shares their terminal session")
+    System_Ext(tmateclient, "tmate Client", "Client that shares their terminal session")
     System_Ext(collaborator, "Collaborator", "Another client who wants access to the terminal")
 
 
