@@ -43,10 +43,10 @@ Container_Boundary(c2, "tmate Client Charm") {
 ### Why is this a machine charm?
 
 The OCI image for tmate-ssh-server requires certain kernel capabilities to run ([SYS_ADMIN](https://github.com/tmate-io/tmate-ssh-server/issues/73#issuecomment-762756632)).
-At design time, due to the limitations of a Juju kubernetes charm, the container was unable to receive the capability.
-Furthermore, providing SSH ingress for machine charms is easier to achieve than for k8s charms. Hence, it was decided to make this a machine charm. 
+At design time, due to the limitations of a Juju Kubernetes charm, the container was unable to receive the capability.
+Furthermore, providing SSH ingress for machine charms is easier to achieve than for K8s charms. Hence, it was decided to make tmate-ssh-server a machine charm. 
 
-See also [[specification] ISD099 Tmate charm for Github Runners](https://discourse.charmhub.io/t/specification-isd099-tmate-charm-for-github-runners/16837) 
+See [[specification] ISD099 Tmate charm for Github Runners](https://discourse.charmhub.io/t/specification-isd099-tmate-charm-for-github-runners/16837) 
 for more information.
 ## OCI images
 
