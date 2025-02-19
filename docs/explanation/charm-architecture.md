@@ -21,7 +21,7 @@ Container_Boundary(c2, "Tmate Client Charm") {
     Container(clientcharm, "Tmate Client Charm", "", "Charm managing Tmate Client workload.")
  }
 
-    System_Ext(tmateclient, "Tmate Client", "Client that shares his terminal session")
+    System_Ext(tmateclient, "Tmate Client", "Client that shares their terminal session")
     System_Ext(collaborator, "Collaborator", "Another client who wants access to the terminal")
 
 
@@ -30,8 +30,8 @@ Container_Boundary(c2, "Tmate Client Charm") {
     Rel(tmatessh, clientcharm, "provides connection details")
     Rel(clientcharm, tmateclient, "init client with connection details")
 
-    Rel(tmateclient, tmatessh, "init session via ssh")
-    Rel(collaborator, tmatessh, "join session via ssh")
+    Rel(tmateclient, tmatessh, "init session via SSH")
+    Rel(collaborator, tmatessh, "join session via SSH")
 
 
     UpdateRelStyle(tmatessh, clientcharm, $offsetY="30", $offsetX="-70")
@@ -43,7 +43,7 @@ Container_Boundary(c2, "Tmate Client Charm") {
 
 ## OCI images
 
-We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI Images for tmate-ssh-server. 
+We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate-ssh-server. 
 The images are defined in [tmate-ssh-server_rock](https://github.com/canonical/tmate-ssh-server-operator/tree/main/tmate-ssh-server_rock).
 They are published to the [Github Container registry](https://github.com/canonical/tmate-ssh-server-operator/pkgs/container/tmate-ssh-server).
 
