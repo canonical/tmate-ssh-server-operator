@@ -46,6 +46,8 @@ The OCI image for tmate-ssh-server requires certain kernel capabilities to run (
 At design time, due to the limitations of a Juju kubernetes charm, the container was unable to receive the capability.
 Furthermore, providing SSH ingress for machine charms is easier to achieve than for k8s charms. Hence, it was decided to make this a machine charm. 
 
+See also [[specification] ISD099 Tmate charm for Github Runners](https://discourse.charmhub.io/t/specification-isd099-tmate-charm-for-github-runners/16837) 
+for more information.
 ## OCI images
 
 We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate-ssh-server. 
