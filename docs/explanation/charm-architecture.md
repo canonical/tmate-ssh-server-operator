@@ -40,6 +40,11 @@ Container_Boundary(c2, "tmate Client Charm") {
     UpdateRelStyle(collaborator, tmatessh, $offsetY="-30", $offsetX="80")
 ```
 
+### Why is this a machine charm?
+
+The OCI image for tmate-ssh-server requires certain kernel capabilities to run ([SYS_ADMIN](https://github.com/tmate-io/tmate-ssh-server/issues/73#issuecomment-762756632)).
+At design time, due to the limitations of a Juju kubernetes charm, the container was unable to receive the capability.
+Furthermore, providing SSH ingress for machine charms is easier to achieve than for k8s charms. Hence, it was decided to make this a machine charm. 
 
 ## OCI images
 
