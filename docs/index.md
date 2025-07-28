@@ -1,4 +1,4 @@
-# Tmate-ssh-server Operator
+# Tmate-ssh-server operator
 
 A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
 deploying and managing [Tmate self-hosted server](https://tmate.io/). Tmate is an

@@ -1,6 +1,6 @@
 # Integrations
 
-### agent
+### Agent
 
 _Interface_: debug-ssh
 _Supported charms_: [GitHub Runner](https://charmhub.io/github-runner)

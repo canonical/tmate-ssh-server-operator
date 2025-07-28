@@ -1,11 +1,11 @@
-# Deploy the tmate-ssh-server charm for the first time
+# Deploy the Tmate-ssh-server charm for the first time
 
 ## What you'll do
 
 - Deploy the [tmate-ssh-server charm](https://charmhub.io/tmate-ssh-server)
-- Get the .tmate.conf through `get-server-config` action
-- Create a tmate client machine and configure tmate client
-- SSH into tmate terminal
+- Get the `.tmate.conf` through `get-server-config` action
+- Create a `Tmate` client machine and configure `Tmate` client
+- SSH into `Tmate` terminal
 
 Tmate is a remote terminal sharing tool that allows users to securely share their terminal with
 others in real-time, making it easy to collaborate, troubleshoot, and provide support across
@@ -39,7 +39,7 @@ juju deploy tmate-ssh-server
 
 ### Get the tmate configuration contents
 
-To register a tmate client, we need a file containing the configuration details.
+To register a Tmate client, we need a file containing the configuration details.
 Use the `get-server-config` action to retrieve the details, and save the output contents
 into `.tmate.conf` for later use.
 
@@ -47,7 +47,7 @@ into `.tmate.conf` for later use.
 juju run tmate-ssh-server/0 get-server-config | grep -E set | sed 's/^[[:space:]]*//' > .tmate.conf
 ```
 
-The output of .tmate.conf file generated from the previous command will look something like the following:
+The output of `.tmate.conf` file generated from the previous command will look something like the following:
 ```
 set -g tmate-server-host <tmate-ssh-server-unit-ip>
 set -g tmate-server-port 10022
@@ -57,14 +57,14 @@ set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 
 ### Create a tmate client machine
 
-To imitate a tmate client, we can add a machine on Juju and install tmate.
+To imitate a `Tmate` client, we can add a machine on Juju and install `Tmate`.
 
 ```
 juju add-machine
 juju ssh 1 -- "sudo apt update && sudo apt install -y tmate"
 ```
 
-Copy the .tmate.conf file we previously created to the client
+Copy the `.tmate.conf` file we previously created to the client
 machine.
 
 Then, register the public key of the current machine (use `ssh-keygen` to generate key files if
@@ -75,7 +75,7 @@ juju scp .tmate.conf 1:~/.tmate.conf
 juju ssh 1 -- "echo $(~/.ssh/id_rsa.pub) >> ~/.ssh/authorized_keys"
 ```
 
-Start the tmate client and get the SSH command.
+Start the Tmate client and get the SSH command.
 ```
 # start a new tmate session
 juju ssh 1 -- "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session -d"

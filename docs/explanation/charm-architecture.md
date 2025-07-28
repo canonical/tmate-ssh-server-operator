@@ -5,7 +5,7 @@ which is the server side of [tmate](https://tmate.io/), an open-source terminal 
 that provides instant terminal sharing capabilities.
 The tmate-ssh-server application is built from source as an OCI image and runs as a systemd service on the machine.
 
-The charm provides the necessary connection details for a tmate client to connect to the tmate-ssh-server service
+The charm provides the necessary connection details for a Tmate client to connect to the tmate-ssh-server service
 via integration data.
 
 
@@ -59,15 +59,15 @@ They are published to the [Github Container registry](https://github.com/canonic
 
 The following Juju [events](https://juju.is/docs/sdk/event) are observed and handled by the charm as follows:
 
-1. [install](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#install): The charm is installed on the machine. The charm tests if a unit ip is assigned, otherwise the event is deferred. Afterwards,
-the charm installs the necessary tmate-ssh-server dependencies, setups ssh keys and installs a systemd service that runs the tmate-ssh-server OCI image. The integration data is updated with the relevant server connection details (equivalent of `tmate.conf` configuration file), 
-which can be used by a tmate client to connect to the server.
+1. [install](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#install): The charm is installed on the machine. The charm tests if a unit IP is assigned, otherwise the event is deferred. Afterwards,
+the charm installs the necessary `tmate-ssh-server` dependencies, setups ssh keys and installs a `systemd` service that runs the `tmate-ssh-server` OCI image. The integration data is updated with the relevant server connection details (equivalent of `tmate.conf` configuration file), 
+which can be used by a `Tmate` client to connect to the server.
 2. [update-status](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#update-status): This is a regular status check. The charm
-checks if the tmate ssh server is still running and restarts it if it is not.
+checks if the tmate-ssh-server is still running and restarts it if it is not.
 3. `get-server-config-action`: This is an [action event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#action-actiont)  triggered by the user
-to get the current server connection configuration (`tmate.conf`), which can be used by a tmate client to connect to the server.
+to get the current server connection configuration (`tmate.conf`), which can be used by a `Tmate` client to connect to the server.
 5. `ssh-debug-relation-joined`: This is a [relation joined event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#endpoint-relation-joined) that fires when 
-a unit joins an integration. It inserts the relevant server connection details into the integration data, which can be used by a tmate client to connect to the server.
+a unit joins an integration. It inserts the relevant server connection details into the integration data, which can be used by a `Tmate` client to connect to the server.
 
 > See more about events in the Juju docs: [Hook](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook)
 
