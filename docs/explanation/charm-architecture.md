@@ -1,11 +1,11 @@
 # Charm architecture
 
-The tmate-ssh-server-operator operates [tmate-ssh-server](https://github.com/tmate-io/tmate-ssh-server),
+The tmate SSH server operator operates [tmate SSH server](https://github.com/tmate-io/tmate-ssh-server),
 which is the server side of [tmate](https://tmate.io/), an open-source terminal multiplexer
 that provides instant terminal sharing capabilities.
-The tmate-ssh-server application is built from source as an OCI image and runs as a systemd service on the machine.
+The tmate SSH server application is built from source as an OCI image and runs as a systemd service on the machine.
 
-The charm provides the necessary connection details for a Tmate client to connect to the tmate-ssh-server service
+The charm provides the necessary connection details for a tmate client to connect to the tmate SSH server service
 via integration data.
 
 
@@ -42,15 +42,15 @@ Container_Boundary(c2, "tmate Client Charm") {
 
 ### Why is this a machine charm?
 
-The OCI image for tmate-ssh-server requires certain kernel capabilities to run ([SYS_ADMIN](https://github.com/tmate-io/tmate-ssh-server/issues/73#issuecomment-762756632)).
+The OCI image for tmate SSH server requires certain kernel capabilities to run ([SYS_ADMIN](https://github.com/tmate-io/tmate-ssh-server/issues/73#issuecomment-762756632)).
 At design time, due to the limitations of a Juju Kubernetes charm, the container was unable to receive the capability.
-Furthermore, providing SSH ingress for machine charms is easier to achieve than for K8s charms. Hence, it was decided to make tmate-ssh-server a machine charm. 
+Furthermore, providing SSH ingress for machine charms is easier to achieve than for K8s charms. Hence, it was decided to make tmate SSH server a machine charm. 
 
-See [[specification] ISD099 Tmate charm for Github Runners](https://discourse.charmhub.io/t/specification-isd099-tmate-charm-for-github-runners/16837) 
+See [[specification] ISD099 tmate charm for Github Runners](https://discourse.charmhub.io/t/specification-isd099-tmate-charm-for-github-runners/16837) 
 for more information.
 ## OCI images
 
-We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate-ssh-server. 
+We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate SSH server. 
 The images are defined in [tmate-ssh-server_rock](https://github.com/canonical/tmate-ssh-server-operator/tree/main/tmate-ssh-server_rock).
 They are published to the [Github Container registry](https://github.com/canonical/tmate-ssh-server-operator/pkgs/container/tmate-ssh-server).
 
@@ -60,14 +60,14 @@ They are published to the [Github Container registry](https://github.com/canonic
 The following Juju [events](https://juju.is/docs/sdk/event) are observed and handled by the charm as follows:
 
 1. [install](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#install): The charm is installed on the machine. The charm tests if a unit IP is assigned, otherwise the event is deferred. Afterwards,
-the charm installs the necessary `tmate-ssh-server` dependencies, setups ssh keys and installs a `systemd` service that runs the `tmate-ssh-server` OCI image. The integration data is updated with the relevant server connection details (equivalent of `tmate.conf` configuration file), 
-which can be used by a `Tmate` client to connect to the server.
+the charm installs the necessary tmate SSH server's dependencies, setups ssh keys and installs a `systemd` service that runs the tmate SSH server OCI image. The integration data is updated with the relevant server connection details (equivalent of `tmate.conf` configuration file), 
+which can be used by a tmate client to connect to the server.
 2. [update-status](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#update-status): This is a regular status check. The charm
-checks if the tmate-ssh-server is still running and restarts it if it is not.
+checks if the tmate SSH server is still running and restarts it if it is not.
 3. `get-server-config-action`: This is an [action event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#action-actiont)  triggered by the user
-to get the current server connection configuration (`tmate.conf`), which can be used by a `Tmate` client to connect to the server.
+to get the current server connection configuration (`tmate.conf`), which can be used by a tmate client to connect to the server.
 5. `ssh-debug-relation-joined`: This is a [relation joined event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#endpoint-relation-joined) that fires when 
-a unit joins an integration. It inserts the relevant server connection details into the integration data, which can be used by a `Tmate` client to connect to the server.
+a unit joins an integration. It inserts the relevant server connection details into the integration data, which can be used by a tmate client to connect to the server.
 
 > See more about events in the Juju docs: [Hook](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook)
 
@@ -92,7 +92,7 @@ juju deploy tmate-ssh-server
 ```python
 self.framework.observe(self.on.install, self._on_install)
 ```
-4. The method `_on_install`, for its turn, will take the necessary actions such as installing the tmate-ssh-server software.
+4. The method `_on_install`, for its turn, will take the necessary actions such as installing the tmate SSH server software.
 
 
 The code is structured according to the best practices described in [Managing charm complexity](https://discourse.charmhub.io/t/specification-isd014-managing-charm-complexity/11619).
@@ -100,4 +100,4 @@ Therefore, in addition to `src/charm.py`, there are other modules in the charm t
 
 - observe changes to the ssh-debug integration
 - manage the state of the charm
-- abstracting interactions with the tmate-ssh-server application
+- abstracting interactions with the tmate SSH server application

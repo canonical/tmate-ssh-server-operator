@@ -1,11 +1,11 @@
-# Deploy the Tmate-ssh-server charm for the first time
+# Deploy the tmate SSH server charm for the first time
 
 ## What you'll do
 
-- Deploy the [tmate-ssh-server charm](https://charmhub.io/tmate-ssh-server)
+- Deploy the [tmate SSH server charm](https://charmhub.io/tmate-ssh-server)
 - Get the `.tmate.conf` through `get-server-config` action
-- Create a `Tmate` client machine and configure `Tmate` client
-- SSH into `Tmate` terminal
+- Create a tmate client machine and configure tmate client
+- SSH into tmate terminal
 
 Tmate is a remote terminal sharing tool that allows users to securely share their terminal with
 others in real-time, making it easy to collaborate, troubleshoot, and provide support across
@@ -14,7 +14,7 @@ remote access without requiring complex network configurations.
 
 ## Requirements
 
-To deploy a tmate-ssh-server charm, you will need a Juju controller bootstrapped with any machine
+To deploy a tmate SSH server charm, you will need a Juju controller bootstrapped with any machine
 controller type.
 To see how to bootstrap your Juju installation with LXD, please refer to the documentation
 on LXD [installation](https://juju.is/docs/juju/lxd).
@@ -29,9 +29,9 @@ set up a new model with the following command.
 juju add-model tmate-tutorial
 ```
 
-### Deploy the tmate-ssh-server charm
+### Deploy the tmate SSH server charm
 
-Use the following command to deploy the tmate-ssh-server charm.
+Use the following command to deploy the tmate SSH server charm.
 
 ```
 juju deploy tmate-ssh-server
@@ -39,7 +39,7 @@ juju deploy tmate-ssh-server
 
 ### Get the tmate configuration contents
 
-To register a Tmate client, we need a file containing the configuration details.
+To register a tmate client, we need a file containing the configuration details.
 Use the `get-server-config` action to retrieve the details, and save the output contents
 into `.tmate.conf` for later use.
 
@@ -57,7 +57,7 @@ set -g tmate-server-ed25519-fingerprint <ed25519-fingerprint>
 
 ### Create a tmate client machine
 
-To imitate a `Tmate` client, we can add a machine on Juju and install `Tmate`.
+To imitate a tmate client, we can add a machine on Juju and install tmate.
 
 ```
 juju add-machine
@@ -75,7 +75,7 @@ juju scp .tmate.conf 1:~/.tmate.conf
 juju ssh 1 -- "echo $(~/.ssh/id_rsa.pub) >> ~/.ssh/authorized_keys"
 ```
 
-Start the Tmate client and get the SSH command.
+Start the tmate client and get the SSH command.
 ```
 # start a new tmate session
 juju ssh 1 -- "tmate -a ~/.ssh/authorized_keys -S /tmp/tmate.sock new-session -d"
@@ -128,7 +128,7 @@ ssh session: ssh -p10022 <user>@<unit-ip>
 
 ### Clean up the environment
 
-Congratulations! You have successfully finished the tmate-ssh-server tutorial. You can now remove
+Congratulations! You have successfully finished the tmate SSH server tutorial. You can now remove
 the `.tmate.conf` file and the Juju model environment that you’ve created using the following
 command.
 
