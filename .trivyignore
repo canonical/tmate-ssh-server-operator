@@ -4,3 +4,4 @@ CVE-2023-45288
 # False positive: https://github.com/canonical/pebble/issues/498
 CVE-2024-34156
 CVE-2024-45338
+CVE-2025-22874
