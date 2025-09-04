@@ -33,7 +33,7 @@ Initialize the charm and register event handlers.
 
 #### <kbd>property</kbd> app
 
-Application that this unit is part of. 
+The application that this unit is part of. 
 
 ---
 
@@ -63,7 +63,7 @@ Shortcut for more simple access the model.
 
 #### <kbd>property</kbd> unit
 
-Unit that this execution is responsible for. 
+The current unit. 
 
 
 

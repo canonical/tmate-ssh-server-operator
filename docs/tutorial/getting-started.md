@@ -1,9 +1,9 @@
-# Deploy the tmate-ssh-server charm for the first time
+# Deploy the tmate SSH server charm for the first time
 
 ## What you'll do
 
-- Deploy the [tmate-ssh-server charm](https://charmhub.io/tmate-ssh-server)
-- Get the .tmate.conf through `get-server-config` action
+- Deploy the [tmate SSH server charm](https://charmhub.io/tmate-ssh-server)
+- Get the `.tmate.conf` through `get-server-config` action
 - Create a tmate client machine and configure tmate client
 - SSH into tmate terminal
 
@@ -14,7 +14,7 @@ remote access without requiring complex network configurations.
 
 ## Requirements
 
-To deploy a tmate-ssh-server charm, you will need a Juju controller bootstrapped with any machine
+To deploy a tmate SSH server charm, you will need a Juju controller bootstrapped with any machine
 controller type.
 To see how to bootstrap your Juju installation with LXD, please refer to the documentation
 on LXD [installation](https://juju.is/docs/juju/lxd).
@@ -29,9 +29,9 @@ set up a new model with the following command.
 juju add-model tmate-tutorial
 ```
 
-### Deploy the tmate-ssh-server charm
+### Deploy the tmate SSH server charm
 
-Use the following command to deploy the tmate-ssh-server charm.
+Use the following command to deploy the tmate SSH server charm.
 
 ```
 juju deploy tmate-ssh-server
@@ -47,7 +47,7 @@ into `.tmate.conf` for later use.
 juju run tmate-ssh-server/0 get-server-config | grep -E set | sed 's/^[[:space:]]*//' > .tmate.conf
 ```
 
-The output of .tmate.conf file generated from the previous command will look something like the following:
+The output of `.tmate.conf` file generated from the previous command will look something like the following:
 ```
 set -g tmate-server-host <tmate-ssh-server-unit-ip>
 set -g tmate-server-port 10022
@@ -64,7 +64,7 @@ juju add-machine
 juju ssh 1 -- "sudo apt update && sudo apt install -y tmate"
 ```
 
-Copy the .tmate.conf file we previously created to the client
+Copy the `.tmate.conf` file we previously created to the client
 machine.
 
 Then, register the public key of the current machine (use `ssh-keygen` to generate key files if
@@ -128,7 +128,7 @@ ssh session: ssh -p10022 <user>@<unit-ip>
 
 ### Clean up the environment
 
-Congratulations! You have successfully finished the tmate-ssh-server tutorial. You can now remove
+Congratulations! You have successfully finished the tmate SSH server tutorial. You can now remove
 the `.tmate.conf` file and the Juju model environment that you’ve created using the following
 command.
 
