@@ -1,7 +1,7 @@
 # Charm architecture
 
 The tmate SSH server operator operates [tmate SSH server](https://github.com/tmate-io/tmate-ssh-server),
-which is the server side of [tmate](https://tmate.io/), an open-source terminal multiplexer
+which is the server side of [tmate](https://github.com/tmate-io/tmate), an open-source terminal multiplexer
 that provides instant terminal sharing capabilities.
 The tmate SSH server application is built from source as an OCI image and runs as a systemd service on the machine.
 

@@ -1,7 +1,9 @@
+<!-- vale Canonical.007-Headings-sentence-case = NO -->
 # Tmate SSH server operator
+<!-- vale Canonical.007-Headings-sentence-case = YES -->
 
-A [Juju](https://juju.is/) [charm](https://juju.is/docs/olm/charmed-operators)
-deploying and managing [Tmate self-hosted server](https://tmate.io/). tmate is an
+A [Juju](https://juju.is/) [charm](https://documentation.ubuntu.com/juju/3.6/reference/charm/)
+deploying and managing [Tmate self-hosted server](https://github.com/tmate-io/tmate). tmate is an
 open source terminal multiplexer, providing instant terminal sharing capabilities.
 
 Tmate enables users to share their terminal session with other users over the internet, allowing
