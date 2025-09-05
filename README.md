@@ -1,4 +1,7 @@
+<!-- vale Canonical.007-Headings-sentence-case = NO -->
 # Tmate SSH server operator
+<!-- vale Canonical.007-Headings-sentence-case = YES -->
+
 <!-- Use this space for badges -->
 
 A Juju charm that provides the self-hosted GitHub runner an integration with self-hosted SSH debug
