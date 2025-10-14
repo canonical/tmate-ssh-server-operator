@@ -91,16 +91,26 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         if not (tmate_status := tmate.status()).running:
             logger.error("tmate-ssh-server is not running:\n %s", tmate_status.status)
-
+            self.unit.status = ops.BlockedStatus(
+                "tmate-ssh-server is not running. Check juju debug-log."
+            )
             logger.info("Will restart tmate-ssh-server daemon.")
-
-            tmate.start_daemon(address=str(self.state.ip_addr))
+            try:
+                tmate.start_daemon(address=str(self.state.ip_addr))
+            except tmate.DaemonError:
+                logger.exception("tmate-ssh-server daemon not active.")
+                self.unit.status = ops.BlockedStatus(
+                    "tmate-ssh-server daemon not active. Check juju debug-log."
+                )
+                return
 
             logger.info("Removing stopped containers.")
             try:
                 tmate.remove_stopped_containers()
             except tmate.DockerError:
                 logger.exception("Failed to remove stopped containers.")
+                self.unit.status = ops.BlockedStatus("Failed to remove stopped containers.")
+                return
         else:
             logger.debug("tmate-ssh-server is running:\n %s", tmate_status.status)
 

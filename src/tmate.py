@@ -8,6 +8,8 @@ import dataclasses
 import hashlib
 import ipaddress
 import logging
+import random
+import string
 
 # subprocess module is required to install and start docker daemon processes, the security
 # implications have been considered.
@@ -186,6 +188,23 @@ def _wait_for(
     raise TimeoutError()
 
 
+def check_docker_container(name: str) -> bool:
+    """Return True if the container is running.
+
+    Args:
+        name: The name of the docker container to check.
+
+    Returns:
+        True if the container is running, False otherwise.
+    """
+    result = subprocess.run(
+        ["docker", "ps", "--filter", f"name={name}", "--format", "{{.Status}}"],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    return "Up" in result.stdout
+
+
 def status() -> DaemonStatus:
     """Check the status of the tmate-ssh-server service.
 
@@ -216,7 +235,9 @@ def start_daemon(address: str) -> None:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
+    container_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=10))
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
+        NAME=container_name,
         WORKDIR=WORK_DIR,
         KEYS_DIR=KEYS_DIR,
         PORT=PORT,
@@ -227,6 +248,7 @@ def start_daemon(address: str) -> None:
         systemd.daemon_reload()
         systemd.service_enable(TMATE_SERVICE_NAME)
         systemd.service_start(TMATE_SERVICE_NAME)
+        _wait_for(partial(check_docker_container, container_name), timeout=60)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
         raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc

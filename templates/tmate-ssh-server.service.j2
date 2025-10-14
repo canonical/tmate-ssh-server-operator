@@ -7,7 +7,7 @@ User=ubuntu
 Group=docker
 WorkingDirectory={{ WORKDIR }}
 # run as root to allow reading from /keys dir
-ExecStart=docker run --user root \
+ExecStart=docker run --name {{ NAME }} --user root \
     --net=host --cap-add SYS_ADMIN -v {{ KEYS_DIR }}:/keys \
     --entrypoint=/srv/tmate-ssh-server/tmate-ssh-server \
     --env SSH_KEYS_PATH=/keys ghcr.io/canonical/tmate-ssh-server:0.1.1 \
