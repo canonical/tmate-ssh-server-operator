@@ -243,16 +243,17 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
             ],
         ),
     )
-
     with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
 
 
-def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
+def test_start_daemon_service_timeout_error(
+    monkeypatch: pytest.MonkeyPatch,
+):
     """
-    arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
+    arrange: given a monkeypatched subprocess call that doesn't return the right output.
     act: when start_daemon is called.
     assert: DaemonError is raised.
     """
@@ -275,11 +276,9 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
         "service_start",
         MagicMock(spec=tmate.systemd.service_start),
     )
-    monkeypatch.setattr(
-        tmate,
-        "_wait_for",
-        MagicMock(spec=tmate._wait_for, side_effect=TimeoutError),
-    )
+    mock_result = MagicMock()
+    mock_result.stdout = "Down"
+    monkeypatch.setattr(tmate.subprocess, "run", MagicMock(return_value=mock_result))
 
     with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")

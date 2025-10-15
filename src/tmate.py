@@ -196,13 +196,18 @@ def check_docker_container(name: str) -> bool:
 
     Returns:
         True if the container is running, False otherwise.
+
+    Raises:
+        DaemonError: If the subprocess command exits with a non-zero exit code.
     """
-    result = subprocess.run(
-        ["docker", "ps", "--filter", f"name={name}", "--format", "{{.Status}}"],
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    return "Up" in result.stdout
+    try:
+        cmd = ["docker", "ps", "--filter", f"name={name}", "--format", "{{.Status}}"]
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
+        return "Up" in result.stdout
+    except subprocess.CalledProcessError as e:
+        raise DaemonError(
+            f"Command {cmd} failed with return code {e.returncode}. Output: {e.stdout}"
+        ) from e
 
 
 def status() -> DaemonStatus:
