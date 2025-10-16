@@ -8,7 +8,7 @@ import dataclasses
 import hashlib
 import ipaddress
 import logging
-import random
+import secrets
 import string
 
 # subprocess module is required to install and start docker daemon processes, the security
@@ -202,7 +202,7 @@ def check_docker_container(name: str) -> bool:
     """
     try:
         cmd = ["docker", "ps", "--filter", f"name={name}", "--format", "{{.Status}}"]
-        result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)  # nosec B603
         return "Up" in result.stdout
     except subprocess.CalledProcessError as e:
         raise DaemonError(
@@ -240,7 +240,9 @@ def start_daemon(address: str) -> None:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
-    container_name = "".join(random.choices(string.ascii_lowercase + string.digits, k=10))
+    container_name = "".join(
+        secrets.choice(string.ascii_lowercase + string.digits) for _ in range(10)
+    )
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
         NAME=container_name,
         WORKDIR=WORK_DIR,
