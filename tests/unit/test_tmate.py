@@ -367,7 +367,7 @@ def test_check_docker_container(monkeypatch: pytest.MonkeyPatch, stdout, result)
     """
     arrange: given a monkeypatched subprocess call.
     act: when check_docker_container is called.
-    assert: DaemonError is raised.
+    assert: The function returns expected value without raising any errors.
     """
     mock_result = MagicMock()
     mock_result.stdout = stdout

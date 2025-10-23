@@ -204,10 +204,10 @@ def check_docker_container(name: str) -> bool:
         cmd = ["docker", "ps", "--filter", f"name={name}", "--format", "{{.Status}}"]
         result = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, check=True)  # nosec B603
         return "Up" in result.stdout
-    except subprocess.CalledProcessError as e:
+    except subprocess.CalledProcessError as exc:
         raise DaemonError(
-            f"Command {cmd} failed with return code {e.returncode}. Output: {e.stdout}"
-        ) from e
+            f"Command {cmd} failed with return code {exc.returncode}. Output: {exc.stdout}"
+        ) from exc
 
 
 def status() -> DaemonStatus:
