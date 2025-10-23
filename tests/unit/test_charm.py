@@ -201,7 +201,7 @@ def test__on_update_status_remove_stopped_containers_error(
     """
     arrange: given a monkeypatched tmate.remove_stopped_containers that raises an exception.
     act: when _on_update_status is called.
-    assert: the exception is caught and logged.
+    assert: the exception is caught and logged and re-raised.
     """
     monkeypatch.setattr(
         tmate, "status", MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
@@ -211,7 +211,8 @@ def test__on_update_status_remove_stopped_containers_error(
         tmate, "remove_stopped_containers", MagicMock(side_effect=tmate.DockerError)
     )
 
-    charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+    with pytest.raises(tmate.DockerError):
+        charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
     assert "Failed to remove stopped containers." in caplog.text
 

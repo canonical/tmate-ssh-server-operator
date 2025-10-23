@@ -108,8 +108,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
                 tmate.remove_stopped_containers()
             except tmate.DockerError:
                 logger.exception("Failed to remove stopped containers.")
-                self.unit.status = ops.BlockedStatus("Failed to remove stopped containers.")
-                return
+                raise
         else:
             logger.debug("tmate-ssh-server is running:\n %s", tmate_status.status)
 
