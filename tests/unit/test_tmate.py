@@ -275,10 +275,20 @@ def test_start_daemon_systemd_service_timeout_error(monkeypatch: pytest.MonkeyPa
         MagicMock(spec=tmate.systemd.service_start),
     )
 
-    def wait_for_side_effect(*args, **kwargs):
+    def wait_for_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
+        """Simulate waiting for a service to start.
+
+        Args:
+            args: Positional arguments.
+            kwargs: Keyword arguments.
+
+        Raises:
+            TimeoutError: On second call to simulate timeout.
+        """
         if not hasattr(wait_for_side_effect, "called_once"):
-            wait_for_side_effect.called_once = True
-            return None
+            # defined at runtime
+            wait_for_side_effect.called_once = True  # type: ignore[attr-defined]
+            return
         raise TimeoutError
 
     monkeypatch.setattr(
