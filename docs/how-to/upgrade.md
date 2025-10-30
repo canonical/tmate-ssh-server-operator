@@ -6,4 +6,4 @@ The Tmate SSH server charm can be upgrade with a [`juju refresh`](https://docume
 juju refresh tmate-ssh-server
 ```
 
-The charm is stateless and does not rely on storage such as databases, therefore there is not additional work beyond upgrading the charm revision.
+The charm is stateless and does not rely on storage such as databases, therefore there is no additional work beyond upgrading the charm revision.

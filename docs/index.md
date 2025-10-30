@@ -37,7 +37,7 @@ Thinking about using the tmate SSH server operator for your next project?
   1. [Getting Started](tutorial/getting-started.md)
 1. [How to](how-to)
   1. [Get server config](how-to/get-server-config.md)
-  1. [Upgrade the charm](how-to/upgrade.md)
+  1. [Upgrade](how-to/upgrade.md)
 1. [Reference](reference)
   1. [Actions](reference/actions.md)
   1. [Configurations](reference/configurations.md)
