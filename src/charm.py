@@ -84,7 +84,11 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.unit.status = ops.ActiveStatus()
 
     def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:
-        """Check the health of the workload and restart if necessary."""
+        """Check the health of the workload and restart if necessary.
+
+        Raises:
+            DaemonError: if there is an issue with the tmate-ssh-server daemon.
+        """
         if not self.state.ip_addr:
             logger.warning("Unit address not assigned. Stop further execution of the hook.")
             return
@@ -93,14 +97,18 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             logger.error("tmate-ssh-server is not running:\n %s", tmate_status.status)
 
             logger.info("Will restart tmate-ssh-server daemon.")
-
-            tmate.start_daemon(address=str(self.state.ip_addr))
+            try:
+                tmate.start_daemon(address=str(self.state.ip_addr))
+            except tmate.DaemonError:
+                logger.exception("tmate-ssh-server daemon not active.")
+                raise
 
             logger.info("Removing stopped containers.")
             try:
                 tmate.remove_stopped_containers()
             except tmate.DockerError:
                 logger.exception("Failed to remove stopped containers.")
+                raise
         else:
             logger.debug("tmate-ssh-server is running:\n %s", tmate_status.status)
 
