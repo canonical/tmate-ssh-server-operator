@@ -15,4 +15,5 @@ jobs:
         ./tests/integration/pre_run_script.sh"
       # self-hosted-runner: true
       # self-hosted-runner-label: "edge"
+      python-version: "3.12"
       modules: '["test_charm", "test_proxy"]'
