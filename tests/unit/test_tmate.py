@@ -243,14 +243,13 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
             ],
         ),
     )
-
     with pytest.raises(tmate.DaemonError) as exc:
         tmate.start_daemon(address="test")
 
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
 
 
-def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
+def test_start_daemon_systemd_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
     """
     arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
     act: when start_daemon is called.
@@ -275,10 +274,27 @@ def test_start_daemon_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
         "service_start",
         MagicMock(spec=tmate.systemd.service_start),
     )
+
+    def wait_for_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
+        """Simulate waiting for a service to start.
+
+        Args:
+            args: Positional arguments.
+            kwargs: Keyword arguments.
+
+        Raises:
+            TimeoutError: On second call to simulate timeout.
+        """
+        if not hasattr(wait_for_side_effect, "called_once"):
+            # defined at runtime
+            wait_for_side_effect.called_once = True  # type: ignore[attr-defined]
+            return
+        raise TimeoutError
+
     monkeypatch.setattr(
         tmate,
         "_wait_for",
-        MagicMock(spec=tmate._wait_for, side_effect=TimeoutError),
+        MagicMock(spec=tmate._wait_for, side_effect=wait_for_side_effect),
     )
 
     with pytest.raises(tmate.DaemonError) as exc:
@@ -350,7 +366,46 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
         tmate.start_daemon(address="test")
 
 
-def test__calculat_fingerprint():
+@pytest.mark.parametrize(
+    "stdout, result",
+    [
+        pytest.param("Up 5 minutes", True, id="container running"),
+        pytest.param("Exited (0) 2 minutes ago", False, id="container not running"),
+    ],
+)
+def test_check_docker_container(monkeypatch: pytest.MonkeyPatch, stdout, result):
+    """
+    arrange: given a monkeypatched subprocess call.
+    act: when check_docker_container is called.
+    assert: The function returns expected value without raising any errors.
+    """
+    mock_result = MagicMock()
+    mock_result.stdout = stdout
+    monkeypatch.setattr(tmate.subprocess, "run", MagicMock(return_value=mock_result))
+
+    assert tmate.check_docker_container(name="test") == result
+
+
+def test_check_docker_container_subprocess_error(monkeypatch: pytest.MonkeyPatch):
+    """
+    arrange: given a monkeypatched subprocess call that raises CalledProcessError.
+    act: when check_docker_container is called.
+    assert: DaemonError is raised.
+    """
+    monkeypatch.setattr(
+        tmate.subprocess,
+        "run",
+        MagicMock(
+            spec=tmate.subprocess.run,
+            side_effect=[tmate.subprocess.CalledProcessError(returncode=1, cmd="test")],
+        ),
+    )
+
+    with pytest.raises(tmate.DaemonError):
+        tmate.check_docker_container(name="test")
+
+
+def test__calculate_fingerprint():
     """
     arrange: given a test fingerprint data.
     act: when _calculate_fingerprint is called.

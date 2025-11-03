@@ -44,7 +44,7 @@ class ProxyConfigFactory(factory.Factory, metaclass=BaseMetaFactory[ProxyConfig]
 
 # The attributes of these classes are generators for the attributes of the meta class
 # mypy incorrectly believes the factories don't support metaclass
-class StateFactory(factory.Factory, metaclass=BaseMetaFactory[State]):  # type: ignore
+class StateFactory(factory.Factory, metaclass=BaseMetaFactory[State]):  # type: ignore[metaclass]
     # Docstrings have been abbreviated for factories, checking for docstrings on model attributes
     # can be skipped.
     """Generate PathInfos."""  # noqa: DCO060
