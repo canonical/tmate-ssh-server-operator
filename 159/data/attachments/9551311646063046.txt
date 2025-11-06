@@ -1,0 +1,18 @@
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model            Controller           Cloud/Region         Version  SLA          Timestamp
+test-charm-9882  github-pr-2ab0e-lxd  localhost/localhost  3.6.11   unsupported  13:27:22Z
+
+App               Version  Status   Scale  Charm             Channel  Rev  Exposed  Message
+tmate-ssh-server           waiting    0/1  tmate-ssh-server             0  no       waiting for machine
+
+Unit                Workload  Agent       Machine  Public address  Ports  Message
+tmate-ssh-server/0  waiting   allocating  0        10.221.99.145          waiting for machine
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        pending  10.221.99.145  juju-9b095e-0  ubuntu@22.04  github-runner  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
