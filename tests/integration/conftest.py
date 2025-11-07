@@ -4,6 +4,7 @@
 """Fixtures for tmate-ssh-server charm integration tests."""
 import logging
 import secrets
+import subprocess
 import typing
 from pathlib import Path
 
@@ -41,10 +42,16 @@ async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> st
     return charm
 
 
+@pytest.fixture(name="series")
+def series_fixture():
+    """Series for deploying any-charm."""
+    return subprocess.check_output(["lsb_release", "-cs"]).strip().decode("utf-8")
+
+
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
-async def tmate_ssh_server_fixture(model: Model, charm: str):
+async def tmate_ssh_server_fixture(model: Model, charm: str, series: str):
     """The tmate-ssh-server application fixture."""
-    app = await model.deploy(charm)
+    app = await model.deploy(charm, series=series)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     return app
 
@@ -158,36 +165,3 @@ http_access deny all"""
     )
     assert retcode == 0, f"Failed to restart squid service, {stdout} {stderr}"
     return machine
-
-
-@pytest_asyncio.fixture(scope="module", name="machine_ip")
-async def machine_ip_fixture(machine: Machine) -> str:
-    """The machine public IP address."""
-
-    def get_machine_ip_address() -> typing.Optional[str]:
-        """Get latest machine IP address.
-
-        Returns:
-            The latest machine IP address if ready, None otherwise.
-        """
-        latest_machine = machine.latest()
-        addresses = latest_machine.data["addresses"]
-        try:
-            address = next(
-                iter(
-                    [
-                        address["value"]
-                        for address in addresses
-                        if address["scope"] != "local-machine"
-                    ]
-                )
-            )
-        except StopIteration:
-            return None
-        return address
-
-    await wait_for(get_machine_ip_address)
-
-    # mypy doesn't understand that get_machine_ip_address has to be str from wait_for statement
-    # above.
-    return typing.cast(str, get_machine_ip_address())

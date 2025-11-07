@@ -7,6 +7,27 @@ import inspect
 import time
 import typing
 
+from juju.machine import Machine
+
+
+def get_machine_ip_address(machine: Machine) -> typing.Optional[str]:
+    """Get latest machine IP address.
+
+    Returns:
+        The latest machine IP address if ready, None otherwise.
+    """
+    latest_machine = machine.latest()
+    addresses = latest_machine.data["addresses"]
+    try:
+        address = next(
+            iter(
+                [address["value"] for address in addresses if address["scope"] != "local-machine"]
+            )
+        )
+    except StopIteration:
+        return None
+    return address
+
 
 async def wait_for(
     func: typing.Callable[[], typing.Union[typing.Awaitable, typing.Any]],
