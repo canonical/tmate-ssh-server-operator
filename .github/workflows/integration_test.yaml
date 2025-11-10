@@ -13,8 +13,10 @@ jobs:
       pre-run-script: |
         -c "chmod +x tests/integration/pre_run_script.sh
         ./tests/integration/pre_run_script.sh"
-      # self-hosted-runner: true
-      # self-hosted-runner-label: "edge"
-      python-version: "3.12"
-      runs-on: "ubuntu-24.04"
+      self-hosted-runner: true
+      self-hosted-runner-label: "edge"
       modules: '["test_charm", "test_proxy"]'
+  allure-report:
+    if: always() && !cancelled()
+    needs: integration-tests
+    uses: canonical/operator-workflows/.github/workflows/allure_report.yaml@main
