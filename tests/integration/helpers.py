@@ -13,6 +13,9 @@ from juju.machine import Machine
 def get_machine_ip_address(machine: Machine) -> typing.Optional[str]:
     """Get latest machine IP address.
 
+    Args:
+        machine: The machine to get the IP address for.
+
     Returns:
         The latest machine IP address if ready, None otherwise.
     """
