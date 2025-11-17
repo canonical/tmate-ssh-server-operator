@@ -26,7 +26,7 @@ async def test_proxy(
     act: when tmate charm is deployed.
     assert: proxy log contains docker access.
     """
-    machine_ip: str | None = await wait_for(get_machine_ip_address(machine=proxy_machine))
+    machine_ip: str | None = await wait_for(lambda: get_machine_ip_address(machine=proxy_machine))
     assert machine_ip is not None, "Proxy machine IP address not found."
 
     await model.set_config(
