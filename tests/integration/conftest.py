@@ -42,7 +42,7 @@ async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> st
     return charm
 
 
-@pytest.fixture(name="series")
+@pytest.fixture(scope="module", name="series")
 def series_fixture():
     """Series for deploying any-charm."""
     return subprocess.check_output(["lsb_release", "-cs"]).strip().decode("utf-8")
