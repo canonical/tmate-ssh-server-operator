@@ -1,0 +1,17 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"
+    arrange: given a related machine charm and a tmate-ssh-server charm.
+    act: when ssh connection is requested.
+    assert: the connection is made successfully.
+    ","0","test_ssh_connection","tests.integration","2025-11-17","broken","2025-11-17","","test_charm","",""
+"
+    arrange: given a tmate-ssh-server charm unit.
+    act: kill the docker process containing the service and
+     fast-forward to next update status event.
+    assert: the service has been restarted successfully.
+    ","0","test_restart_of_inactive_service","tests.integration","2025-11-17","broken","2025-11-17","","test_charm","",""
+"
+    arrange: given a model configured with squid proxy ip address.
+    act: when tmate charm is deployed.
+    assert: proxy log contains docker access.
+    ","5968","test_proxy","tests.integration","2025-11-17","broken","2025-11-17","","test_proxy","",""
