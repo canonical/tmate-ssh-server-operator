@@ -4,7 +4,9 @@
 """Fixtures for tmate-ssh-server charm integration tests."""
 import logging
 import secrets
-import subprocess
+
+# Subprocess module is used to check series
+import subprocess  # nosec B404
 import typing
 from pathlib import Path
 
@@ -45,7 +47,8 @@ async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> st
 @pytest.fixture(scope="module", name="series")
 def series_fixture():
     """Series for deploying any-charm."""
-    return subprocess.check_output(["lsb_release", "-cs"]).strip().decode("utf-8")
+    # nosec B603 - lsb_release is a system command with no user input
+    return subprocess.check_output(["/usr/bin/lsb_release", "-cs"]).strip().decode("utf-8")
 
 
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
