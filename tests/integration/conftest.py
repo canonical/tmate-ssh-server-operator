@@ -4,6 +4,9 @@
 """Fixtures for tmate-ssh-server charm integration tests."""
 import logging
 import secrets
+
+# Subprocess module is used to check series
+import subprocess  # nosec B404
 import typing
 from pathlib import Path
 
@@ -29,22 +32,47 @@ def model_fixture(ops_test: OpsTest) -> Model:
     return ops_test.model
 
 
+@pytest.fixture(name="codename", scope="module")
+def codename_fixture():
+    """Series codename for deploying any-charm."""
+    return (
+        subprocess.check_output(["/usr/bin/lsb_release", "-cs"])  # nosec B603
+        .strip()
+        .decode("utf-8")
+    )
+
+
+@pytest.fixture(name="series", scope="module")
+def series_fixture():
+    """Series version for deploying any-charm."""
+    return (
+        subprocess.check_output(["/usr/bin/lsb_release", "-rs"])  # nosec B603
+        .strip()
+        .decode("utf-8")
+    )
+
+
 @pytest_asyncio.fixture(scope="module", name="charm")
-async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> str:
+async def charm_fixture(
+    request: pytest.FixtureRequest, ops_test: OpsTest, series: str
+) -> str | Path:
     """The path to charm."""
     charm = request.config.getoption("--charm-file")
     if not charm:
         charm = await ops_test.build_charm(".")
     else:
-        charm = f"./{charm}"
+        charm_dir = Path(f"./{charm}").parent
+        charm_matching_series = list(charm_dir.rglob(f"*{series}*.charm"))
+        assert charm_matching_series, f"No build found for series {series}"
+        return f"./{charm_matching_series[0]}"
 
     return charm
 
 
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
-async def tmate_ssh_server_fixture(model: Model, charm: str):
+async def tmate_ssh_server_fixture(model: Model, charm: str, codename: str):
     """The tmate-ssh-server application fixture."""
-    app = await model.deploy(charm)
+    app = await model.deploy(charm, series=codename)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     return app
 
@@ -158,36 +186,3 @@ http_access deny all"""
     )
     assert retcode == 0, f"Failed to restart squid service, {stdout} {stderr}"
     return machine
-
-
-@pytest_asyncio.fixture(scope="module", name="machine_ip")
-async def machine_ip_fixture(machine: Machine) -> str:
-    """The machine public IP address."""
-
-    def get_machine_ip_address() -> typing.Optional[str]:
-        """Get latest machine IP address.
-
-        Returns:
-            The latest machine IP address if ready, None otherwise.
-        """
-        latest_machine = machine.latest()
-        addresses = latest_machine.data["addresses"]
-        try:
-            address = next(
-                iter(
-                    [
-                        address["value"]
-                        for address in addresses
-                        if address["scope"] != "local-machine"
-                    ]
-                )
-            )
-        except StopIteration:
-            return None
-        return address
-
-    await wait_for(get_machine_ip_address)
-
-    # mypy doesn't understand that get_machine_ip_address has to be str from wait_for statement
-    # above.
-    return typing.cast(str, get_machine_ip_address())

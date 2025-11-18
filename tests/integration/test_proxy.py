@@ -9,7 +9,7 @@ from juju.model import Model
 from juju.unit import Unit
 from pytest_operator.plugin import OpsTest
 
-from .helpers import wait_for
+from .helpers import get_machine_ip_address, wait_for
 
 logger = logging.getLogger(__name__)
 
@@ -19,13 +19,16 @@ async def test_proxy(
     model: Model,
     charm: str,
     proxy_machine: Machine,
-    machine_ip: str,
+    codename: str,
 ):
     """
     arrange: given a model configured with squid proxy ip address.
     act: when tmate charm is deployed.
     assert: proxy log contains docker access.
     """
+    machine_ip: str | None = await wait_for(lambda: get_machine_ip_address(machine=proxy_machine))
+    assert machine_ip is not None, "Proxy machine IP address not found."
+
     await model.set_config(
         {
             "juju-http-proxy": f"http://{machine_ip}:3218",
@@ -34,7 +37,7 @@ async def test_proxy(
     )
 
     logger.info("Deploying tmate charm.")
-    app = await model.deploy(charm)
+    app = await model.deploy(charm, series=codename)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     unit: Unit = next(iter(app.units))
 
