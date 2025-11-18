@@ -44,7 +44,9 @@ def series_fixture():
 
 
 @pytest_asyncio.fixture(scope="module", name="charm")
-async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest, series: str) -> str:
+async def charm_fixture(
+    request: pytest.FixtureRequest, ops_test: OpsTest, series: str
+) -> str | Path:
     """The path to charm."""
     charm = request.config.getoption("--charm-file")
     if not charm:
