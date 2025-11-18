@@ -32,18 +32,6 @@ def model_fixture(ops_test: OpsTest) -> Model:
     return ops_test.model
 
 
-@pytest_asyncio.fixture(scope="module", name="charm")
-async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> str:
-    """The path to charm."""
-    charm = request.config.getoption("--charm-file")
-    if not charm:
-        charm = await ops_test.build_charm(".")
-    else:
-        charm = f"./{charm}"
-
-    return charm
-
-
 @pytest.fixture(scope="module", name="series")
 def series_fixture():
     """Series for deploying any-charm."""
@@ -53,6 +41,21 @@ def series_fixture():
         .strip()
         .decode("utf-8")
     )
+
+
+@pytest_asyncio.fixture(scope="module", name="charm")
+async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest, series: str) -> str:
+    """The path to charm."""
+    charm = request.config.getoption("--charm-file")
+    if not charm:
+        charm = await ops_test.build_charm(".")
+    else:
+        charm_dir = Path(f"./{charm}").parent
+        charm_matching_series = list(charm_dir.rglob(f"*{series}*.charm"))
+        assert charm_matching_series is not None, f"No build found for series {series}"
+        return charm_matching_series[0]
+
+    return charm
 
 
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
