@@ -35,13 +35,21 @@ def model_fixture(ops_test: OpsTest) -> Model:
 @pytest.fixture(name="codename", scope="module")
 def codename_fixture():
     """Series codename for deploying any-charm."""
-    return subprocess.check_output(["/usr/bin/lsb_release", "-cs"]).strip().decode("utf-8")
+    return (
+        subprocess.check_output(["/usr/bin/lsb_release", "-cs"])  # nosec B603
+        .strip()
+        .decode("utf-8")
+    )
 
 
 @pytest.fixture(name="series", scope="module")
 def series_fixture():
     """Series version for deploying any-charm."""
-    return subprocess.check_output(["/usr/bin/lsb_release", "-rs"]).strip().decode("utf-8")
+    return (
+        subprocess.check_output(["/usr/bin/lsb_release", "-rs"])  # nosec B603
+        .strip()
+        .decode("utf-8")
+    )
 
 
 @pytest_asyncio.fixture(scope="module", name="charm")
@@ -55,7 +63,7 @@ async def charm_fixture(
     else:
         charm_dir = Path(f"./{charm}").parent
         charm_matching_series = list(charm_dir.rglob(f"*{series}*.charm"))
-        assert len(charm_matching_series), f"No build found for series {series}"
+        assert charm_matching_series, f"No build found for series {series}"
         return charm_matching_series[0]
 
     return charm
