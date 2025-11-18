@@ -47,8 +47,12 @@ async def charm_fixture(request: pytest.FixtureRequest, ops_test: OpsTest) -> st
 @pytest.fixture(scope="module", name="series")
 def series_fixture():
     """Series for deploying any-charm."""
-    # nosec B603 - lsb_release is a system command with no user input
-    return subprocess.check_output(["/usr/bin/lsb_release", "-cs"]).strip().decode("utf-8")
+    return (
+        # lsb_release is a system command with no user input
+        subprocess.check_output(["/usr/bin/lsb_release", "-cs"])  # nosec B603
+        .strip()
+        .decode("utf-8")
+    )
 
 
 @pytest_asyncio.fixture(scope="module", name="tmate_ssh_server")
