@@ -64,7 +64,7 @@ async def charm_fixture(
         charm_dir = Path(f"./{charm}").parent
         charm_matching_series = list(charm_dir.rglob(f"*{series}*.charm"))
         assert charm_matching_series, f"No build found for series {series}"
-        return charm_matching_series[0]
+        return f"./{charm_matching_series[0]}"
 
     return charm
 
