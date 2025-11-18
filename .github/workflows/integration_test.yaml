@@ -16,6 +16,8 @@ jobs:
       self-hosted-runner: true
       self-hosted-runner-label: "edge"
       modules: '["test_charm", "test_proxy"]'
+      tmate-debug: true
+      tmate-timeout: 90
   allure-report:
     if: always() && !cancelled()
     needs: integration-tests
