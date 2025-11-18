@@ -25,8 +25,7 @@ docs: https://discourse.charmhub.io/t/tmate-ssh-server-documentation-overview/12
 issues: https://github.com/canonical/tmate-ssh-server-operator/issues
 source: https://github.com/canonical/tmate-ssh-server-operator
 summary: Tmate SSH Relay Server
-series:
-  - jammy
+
 tags:
   - application_development
   - ops
