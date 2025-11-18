@@ -19,7 +19,7 @@ async def test_proxy(
     model: Model,
     charm: str,
     proxy_machine: Machine,
-    series: str,
+    codename: str,
 ):
     """
     arrange: given a model configured with squid proxy ip address.
@@ -37,7 +37,7 @@ async def test_proxy(
     )
 
     logger.info("Deploying tmate charm.")
-    app = await model.deploy(charm, series=series)
+    app = await model.deploy(charm, series=codename)
     await model.wait_for_idle(apps=[app.name], wait_for_active=True)
     unit: Unit = next(iter(app.units))
 
