@@ -1,0 +1,12 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"
+    arrange: given a tmate-ssh-server charm unit.
+    act: kill the docker process containing the service and
+     fast-forward to next update status event.
+    assert: the service has been restarted successfully.
+    ","","test_restart_of_inactive_service","tests.integration","","unknown","","","test_charm","",""
+"
+    arrange: given a related machine charm and a tmate-ssh-server charm.
+    act: when ssh connection is requested.
+    assert: the connection is made successfully.
+    ","","test_ssh_connection","tests.integration","","unknown","","","test_charm","",""
