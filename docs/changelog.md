@@ -2,6 +2,10 @@
 
 This changelog documents user-relevant changes to the tmate SSH server charm.
 
+## 2025-12-17
+
+- Moved charm-architecture.md from Explanation to Reference category.
+
 ## 2025-10-28
 
 - Added docs on how to upgrade the charm.
