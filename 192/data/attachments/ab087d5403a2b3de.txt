@@ -1,0 +1,65 @@
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[32mINFO    [0m pytest_operator.plugin:plugin.py:762 Adding model github-pr-ed8d1-lxd:test-proxy-33rw on cloud localhost
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHServer received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHSession received from the controller
+[33mWARNING [0m juju.client.connection:connection.py:858 unexpected facade SSHTunneler received from the controller
+[32mINFO    [0m tests.integration.conftest:conftest.py:123 Waiting for machine to be running... pending
+[32mINFO    [0m tests.integration.conftest:conftest.py:123 Waiting for machine to be running... running
+[32mINFO    [0m tests.integration.conftest:conftest.py:128 Running update.
+[32mINFO    [0m tests.integration.conftest:conftest.py:150 Installing squid.
+[32mINFO    [0m tests.integration.test_proxy:test_proxy.py:39 Deploying tmate charm.
+[32mINFO    [0m juju.model:__init__.py:2301 Deploying local:noble/tmate-ssh-server-0
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  tmate-ssh-server/0 [allocating] waiting: waiting for machine
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  tmate-ssh-server/0 [idle] active: 
+[32mINFO    [0m tests.integration.test_proxy:test_proxy.py:54 Squid access log: 1769873249.044     72 10.169.233.228 TCP_MISS/304 571 GET http://security.ubuntu.com/ubuntu/dists/noble-security/InRelease - HIER_DIRECT/185.125.190.82 -
+1769873249.045     74 10.169.233.228 TCP_MISS/304 577 GET http://archive.ubuntu.com/ubuntu/dists/noble/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873249.080     34 10.169.233.228 TCP_MISS/304 577 GET http://archive.ubuntu.com/ubuntu/dists/noble-updates/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873249.114     33 10.169.233.228 TCP_MISS/304 577 GET http://archive.ubuntu.com/ubuntu/dists/noble-backports/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873249.581    508 10.169.233.228 TCP_TUNNEL/200 4635 CONNECT esm.ubuntu.com:443 - HIER_DIRECT/91.189.91.46 -
+1769873250.198     34 10.169.233.228 TCP_MISS/304 577 GET http://archive.ubuntu.com/ubuntu/dists/noble/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873250.199     34 10.169.233.228 TCP_MISS/304 571 GET http://security.ubuntu.com/ubuntu/dists/noble-security/InRelease - HIER_DIRECT/185.125.190.82 -
+1769873250.233     34 10.169.233.228 TCP_MISS/304 577 GET http://archive.ubuntu.com/ubuntu/dists/noble-updates/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873250.268     33 10.169.233.228 TCP_MISS/304 571 GET http://archive.ubuntu.com/ubuntu/dists/noble-backports/InRelease - HIER_DIRECT/91.189.92.22 -
+1769873250.810    518 10.169.233.228 TCP_TUNNEL/200 4635 CONNECT esm.ubuntu.com:443 - HIER_DIRECT/91.189.91.46 -
+1769873251.720     96 10.169.233.228 TCP_MISS/200 66122 GET http://archive.ubuntu.com/ubuntu/pool/universe/p/pigz/pigz_2.8-1_amd64.deb - HIER_DIRECT/91.189.92.22 application/vnd.debian.binary-package
+1769873252.023    303 10.169.233.228 TCP_MISS/200 8815777 GET http://archive.ubuntu.com/ubuntu/pool/main/r/runc-app/runc_1.3.3-0ubuntu1%7e24.04.3_amd64.deb - HIER_DIRECT/91.189.92.22 application/vnd.debian.binary-package
+1769873252.523    499 10.169.233.228 TCP_MISS/200 38421715 GET http://archive.ubuntu.com/ubuntu/pool/main/c/containerd-app/containerd_1.7.28-0ubuntu1%7e24.04.2_amd64.deb - HIER_DIRECT/91.189.92.22 application/vnd.debian.binary-package
+1769873252.848    324 10.169.233.228 TCP_MISS/200 28325695 GET http://archive.ubuntu.com/ubuntu/pool/universe/d/docker.io-app/docker.io_28.2.2-0ubuntu1%7e24.04.1_amd64.deb - HIER_DIRECT/91.189.92.22 application/vnd.debian.binary-package
+1769873258.089    190 10.169.233.228 TCP_TUNNEL/200 6353 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.255    165 10.169.233.228 TCP_TUNNEL/200 6242 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.461    205 10.169.233.228 TCP_TUNNEL/200 6376 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.654    188 10.169.233.228 TCP_TUNNEL/200 7760 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.834    174 10.169.233.228 TCP_TUNNEL/200 6670 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.848    188 10.169.233.228 TCP_TUNNEL/200 6676 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.851    192 10.169.233.228 TCP_TUNNEL/200 6692 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.853    194 10.169.233.228 TCP_TUNNEL/200 6679 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873258.865     17 10.169.233.228 TCP_TUNNEL/200 7786 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+1769873258.865     11 10.169.233.228 TCP_TUNNEL/200 9895 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+1769873258.959    107 10.169.233.228 TCP_TUNNEL/200 29595235 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+1769873259.037    202 10.169.233.228 TCP_TUNNEL/200 67167534 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+1769873259.051    186 10.169.233.228 TCP_TUNNEL/200 6671 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873259.061      9 10.169.233.228 TCP_TUNNEL/200 7352 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+1769873259.145    185 10.169.233.228 TCP_TUNNEL/200 6668 CONNECT ghcr.io:443 - HIER_DIRECT/20.26.156.211 -
+1769873259.157     12 10.169.233.228 TCP_TUNNEL/200 7217 CONNECT pkg-containers.githubusercontent.com:443 - HIER_DIRECT/185.199.110.154 -
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model            Controller           Cloud/Region         Version  SLA          Timestamp
+test-proxy-33rw  github-pr-ed8d1-lxd  localhost/localhost  3.6.14   unsupported  15:28:06Z
+
+App               Version  Status  Scale  Charm             Channel  Rev  Exposed  Message
+tmate-ssh-server           active      1  tmate-ssh-server             0  no       
+
+Unit                 Workload  Agent  Machine  Public address  Ports      Message
+tmate-ssh-server/0*  active    idle   0        10.169.233.228  10022/tcp  
+
+Machine  State    Address         Inst id        Base          AZ             Message
+0        started  10.169.233.228  juju-983d87-0  ubuntu@24.04  github-runner  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 15:26:38 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 15:26:38 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
