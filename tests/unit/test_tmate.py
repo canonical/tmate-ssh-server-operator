@@ -50,9 +50,7 @@ def test_install_dependencies_proxy_config(monkeypatch: pytest.MonkeyPatch):
     "https-proxy": "{proxy_config.https_proxy}",
     "no-proxy": "{proxy_config.no_proxy}"
   }}
-}}""" == tmp_file_path.read_text(
-            encoding="utf-8"
-        )
+}}""" == tmp_file_path.read_text(encoding="utf-8")
 
 
 @pytest.mark.parametrize(
@@ -497,17 +495,12 @@ def test_generate_tmate_conf(fingerprints: tmate.Fingerprints):
     """
     host = "test_host_value"
 
-    assert (
-        textwrap.dedent(
-            f"""
+    assert textwrap.dedent(f"""
         set -g tmate-server-host {host}
         set -g tmate-server-port {tmate.PORT}
         set -g tmate-server-rsa-fingerprint {fingerprints.rsa}
         set -g tmate-server-ed25519-fingerprint {fingerprints.ed25519}
-        """
-        )
-        == tmate.generate_tmate_conf(host)
-    )
+        """) == tmate.generate_tmate_conf(host)
 
 
 def test_remove_stopped_containers_error(monkeypatch: pytest.MonkeyPatch):

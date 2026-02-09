@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for tmate-ssh-server charm."""
+
 import logging
 
 from juju.machine import Machine
@@ -47,7 +48,7 @@ async def test_proxy(
         Returns:
             Whether ghcr.io access was found in proxy log.
         """
-        (retcode, stdout, stderr) = await ops_test.juju(
+        retcode, stdout, stderr = await ops_test.juju(
             "ssh", proxy_machine.entity_id, "sudo cat /var/log/squid/access.log"
         )
         assert retcode == 0, f"Failed read squid access log, {stdout} {stderr}"

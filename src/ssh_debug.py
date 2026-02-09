@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Observer module for ssh-debug integration."""
+
 import logging
 import typing
 
