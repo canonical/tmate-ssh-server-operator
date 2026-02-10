@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Fixtures for tmate-ssh-server charm integration tests."""
+
 import logging
 import secrets
 
@@ -126,7 +127,7 @@ async def machine_fixture(model: Model, ops_test: OpsTest):
     await wait_for(wait_machine, timeout=60 * 5)
 
     logger.info("Running update.")
-    (retcode, _, stderr) = await ops_test.juju("ssh", str(machine.entity_id), "sudo apt update -y")
+    retcode, _, stderr = await ops_test.juju("ssh", str(machine.entity_id), "sudo apt update -y")
     assert retcode == 0, f"Failed to run apt update, {stderr}"
     return machine
 
@@ -135,7 +136,7 @@ async def machine_fixture(model: Model, ops_test: OpsTest):
 async def ssh_machine_fixture(ops_test: OpsTest, machine: Machine):
     """A machine to test tmate ssh connection."""
     logger.info("Installing tmate.")
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh",
         str(machine.entity_id),
         "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y tmate",
@@ -148,7 +149,7 @@ async def ssh_machine_fixture(ops_test: OpsTest, machine: Machine):
 async def proxy_machine_fixture(ops_test: OpsTest, machine: Machine):
     """A machine to host squid proxy."""
     logger.info("Installing squid.")
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh",
         str(machine.entity_id),
         "DEBIAN_FRONTEND=noninteractive sudo apt-get install -y squid",
@@ -171,17 +172,17 @@ http_access allow all
 http_access deny all"""
     temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
     temp_config_file_path.write_text(squid_config, encoding="utf-8")
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "scp", temp_config_file_path.name, f"{machine.entity_id}:~/squid.conf"
     )
     assert retcode == 0, f"Failed to scp squid conf file {stdout} {stderr}"
     temp_config_file_path.unlink()
     # cannot scp directly to /etc due to permission error
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh", str(machine.entity_id), "sudo mv ~/squid.conf /etc/squid/squid.conf"
     )
     assert retcode == 0, f"Failed to move squid conf file {stdout} {stderr}"
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh", str(machine.entity_id), "sudo systemctl restart squid.service"
     )
     assert retcode == 0, f"Failed to restart squid service, {stdout} {stderr}"

@@ -331,14 +331,12 @@ def generate_tmate_conf(host: str) -> str:
     except (IncompleteInitError, KeyInstallError) as exc:
         raise FingerprintError("Error generating fingerprints.") from exc
 
-    return textwrap.dedent(
-        f"""
+    return textwrap.dedent(f"""
         set -g tmate-server-host {host}
         set -g tmate-server-port {PORT}
         set -g tmate-server-rsa-fingerprint {fingerprints.rsa}
         set -g tmate-server-ed25519-fingerprint {fingerprints.ed25519}
-        """
-    )
+        """)
 
 
 def remove_stopped_containers() -> None:

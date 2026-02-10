@@ -2,6 +2,7 @@
 # See LICENSE file for licensing details.
 
 """Integration tests for tmate-ssh-server charm."""
+
 import logging
 import secrets
 from pathlib import Path
@@ -30,7 +31,7 @@ async def test_ssh_connection(
     """
     temp_config_file_path = Path(f"./{secrets.token_hex(8)}")
     temp_config_file_path.write_text(tmate_config, encoding="utf-8")
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "scp", temp_config_file_path.name, f"{tmate_machine.entity_id}:~/.tmate.conf"
     )
     assert retcode == 0, f"Failed to scp tmate conf file {stdout} {stderr}"
@@ -41,7 +42,7 @@ async def test_ssh_connection(
     )
 
     logger.info("Starting tmate session")
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh",
         tmate_machine.entity_id,
         "--",
@@ -49,12 +50,12 @@ async def test_ssh_connection(
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
     logger.info("New session created %s %s %s", retcode, stdout, stderr)
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock wait tmate-ready"
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
     logger.info("Tmate ready %s %s %s", retcode, stdout, stderr)
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh", tmate_machine.entity_id, "--", "tmate -S /tmp/tmate.sock display -p '#{tmate_ssh}'"
     )
     assert retcode == 0, f"Error running ssh display command, {stdout}, {stderr}"
@@ -88,9 +89,7 @@ async def test_ssh_connection(
     session.send("echo test > ~/test.txt && cat ~/test.txt\n")  # type: ignore
     stdout = session.recv(10000)
     logger.info(SHELL_STDOUT_LOG_STR, str(stdout))
-    (retcode, stdout, stderr) = await ops_test.juju(
-        "ssh", tmate_machine.entity_id, "cat ~/test.txt"
-    )
+    retcode, stdout, stderr = await ops_test.juju("ssh", tmate_machine.entity_id, "cat ~/test.txt")
 
     assert retcode == 0, f"Error running ssh command, {stdout}, {stderr}"
     assert "test" in stdout, f"Failed to write with ssh command, {stdout}"
@@ -106,10 +105,10 @@ async def test_restart_of_inactive_service(
     assert: the service has been restarted successfully.
     """
     await ops_test.juju("ssh", unit.entity_id, "--", "docker stop $(docker ps -q)")
-    (retcode, stdout, stderr) = await ops_test.juju("ssh", unit.entity_id, "--", "docker ps")
+    retcode, stdout, stderr = await ops_test.juju("ssh", unit.entity_id, "--", "docker ps")
     assert retcode == 0, f"Error running docker ps command, {stdout}, {stderr}"
     assert "tmate-ssh-server" not in stdout, "tmate-ssh-server service is still running"
-    (retcode, _, _) = await ops_test.juju(
+    retcode, _, _ = await ops_test.juju(
         "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )
     assert retcode != 0, "tmate-ssh-server service is still running"
@@ -117,11 +116,11 @@ async def test_restart_of_inactive_service(
     async with ops_test.fast_forward():
         await unit.model.wait_for_idle(apps=[tmate_ssh_server.name], status=ActiveStatus.name)
 
-    (retcode, stdout, stderr) = await ops_test.juju(
+    retcode, stdout, stderr = await ops_test.juju(
         "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )
     assert retcode == 0, f"tmate-ssh-server service is not running, {stdout}, {stderr}"
 
-    (retcode, stdout, stderr) = await ops_test.juju("ssh", unit.entity_id, "--", "docker ps")
+    retcode, stdout, stderr = await ops_test.juju("ssh", unit.entity_id, "--", "docker ps")
     assert retcode == 0, f"Error running docker ps command, {stdout}, {stderr}"
     assert "tmate-ssh-server" in stdout, "tmate-ssh-server service is not running"
