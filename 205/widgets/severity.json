@@ -1,0 +1,1 @@
+[{"uid":"eab4a1268beca80f","name":"test_ssh_connection","time":{},"status":"unknown","severity":"normal"},{"uid":"6bc24e6444c5343e","name":"test_proxy","time":{"start":1774711697145,"stop":1774711738097,"duration":40952},"status":"broken","severity":"normal"},{"uid":"1a460fd675d0b15a","name":"test_restart_of_inactive_service","time":{},"status":"unknown","severity":"normal"}]
