@@ -1,0 +1,45 @@
+[32mINFO    [0m juju.model:__init__.py:3254 Waiting for model:
+  tmate-ssh-server/0 [idle] active:
+[32mINFO    [0m pytest_operator.plugin:plugin.py:951 Model status:
+
+Model            Controller           Cloud/Region         Version  SLA          Timestamp
+test-charm-pvvi  github-pr-94bdb-lxd  localhost/localhost  3.6.21   unsupported  15:32:08Z
+
+App               Version  Status  Scale  Charm             Channel  Rev  Exposed  Message
+tmate-ssh-server           active      1  tmate-ssh-server             0  no       
+
+Unit                 Workload  Agent  Machine  Public address  Ports      Message
+tmate-ssh-server/0*  active    idle   0        10.125.29.74    10022/tcp  
+
+Machine  State    Address        Inst id        Base          AZ             Message
+0        started  10.125.29.74   juju-7ad191-0  ubuntu@24.04  github-runner  Running
+1        started  10.125.29.179  juju-7ad191-1  ubuntu@24.04  github-runner  Running
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:957 Juju error logs:
+
+machine-0: 15:29:37 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-0: 15:29:37 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 15:31:01 ERROR juju.worker.dependency "kvm-container-provisioner" manifold worker returned unexpected error: container types not yet available
+machine-1: 15:31:01 ERROR juju.worker.dependency "lxd-container-provisioner" manifold worker returned unexpected error: container types not yet available
+unit-tmate-ssh-server-0: 15:32:02 ERROR unit.tmate-ssh-server/0.juju-log tmate-ssh-server is not running:
+ × tmate-ssh-server.service - Docker instance to serve tmate-ssh-server.
+     Loaded: loaded (/etc/systemd/system/tmate-ssh-server.service; enabled; preset: enabled)
+     Active: failed (Result: exit-code) since Sat 2026-04-11 15:31:51 UTC; 11s ago
+   Duration: 2min 553ms
+    Process: 3825 ExecStart=docker run --name 943vs9ptea --user root --net=host --cap-add SYS_ADMIN -v /home/ubuntu/keys:/keys --entrypoint=/srv/tmate-ssh-server/tmate-ssh-server --env SSH_KEYS_PATH=/keys ghcr.io/canonical/tmate-ssh-server:0.1.1 -A -h 10.125.29.74 -p 10022 -k /keys (code=exited, status=137)
+   Main PID: 3825 (code=exited, status=137)
+        CPU: 27ms
+
+Apr 11 15:29:57 juju-7ad191-0 docker[3825]: Loading key /keys/ssh_host_ed25519_key
+Apr 11 15:29:57 juju-7ad191-0 docker[3825]: Accepting connections on :10022
+Apr 11 15:31:38 juju-7ad191-0 docker[3825]: [XjyF...] Spawning daemon ip=10.125.29.179
+Apr 11 15:31:38 juju-7ad191-0 docker[3825]: [XjyF...] tmate version=2.4.0, protocol=6
+Apr 11 15:31:38 juju-7ad191-0 docker[3825]: [XjyF...] sysname=Linux machine=x86_64 release=6.17.0-20-generic version=#20~24.04.1-Ubuntu SMP PREEMPT_DYNAMIC Thu Mar 19 01:28:37 UTC 2 nodename=juju-7ad191-1
+Apr 11 15:31:38 juju-7ad191-0 docker[3825]: [XjyF...] Restricting ssh access, num_keys=3
+Apr 11 15:31:39 juju-7ad191-0 docker[3825]: [XjyF...] Spawning pty client ip=10.125.29.1
+Apr 11 15:31:39 juju-7ad191-0 docker[3825]: [XjyF...] Client joined (cid=1)
+Apr 11 15:31:51 juju-7ad191-0 systemd[1]: tmate-ssh-server.service: Main process exited, code=exited, status=137/n/a
+Apr 11 15:31:51 juju-7ad191-0 systemd[1]: tmate-ssh-server.service: Failed with result 'exit-code'.
+
+
+[32mINFO    [0m pytest_operator.plugin:plugin.py:1039 Forgetting model main...
