@@ -13,7 +13,7 @@ real-time.
 This charm provides the tmate SSH server service, which is paired with the tmate client to provide
 a self-hosted SSH relay server.
 
-For DevOps and SRE teams, this charm will make operating a self-hosted tmate SSH server simple and
+For DevOps and SRE teams, this charm will make operating a self-hosted tmate SSH server
 straightforward through Juju's clean interface. Through its integration with the
 [GitHub runner](https://charmhub.io/github-runner) charm, it provides SSH debug access to the
 runner VMs managed by that charm.
@@ -22,8 +22,8 @@ runner VMs managed by that charm.
 
 |                 |                                                                                                                                                                      |
 |-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Get started** | [Deploy the tmate SSH server charm for the first time](tutorial/getting-started.md)                                                                                  |
-| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Upgrade](how-to/upgrade.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) |
+| **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                  |
+| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Upgrade](how-to/upgrade.md) |
 | **Relations**   | [Relation endpoints](reference/relations.md)                                                                                                                         |
 | **Design**      | [Charm architecture](reference/charm-architecture.md) \| [Port number](explanation/port-number.md)                                                                   |
 
