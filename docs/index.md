@@ -20,12 +20,11 @@ runner VMs managed by that charm.
 
 ## In this documentation
 
-|                 |                                                                                                                                                                      |
-|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                  |
-| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Upgrade](how-to/upgrade.md) |
-| **Relations**   | [Relation endpoints](reference/relations.md)                                                                                                                         |
-| **Design**      | [Charm architecture](reference/charm-architecture.md) \| [Port number](explanation/port-number.md)                                                                   |
+|                 |                                                                                                                                                                                                                        |
+|-----------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                                                                                       |
+| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Relation endpoints](reference/relations.md) \|   [Upgrade](how-to/upgrade.md) |
+| **Design**      | [Charm architecture](reference/charm-architecture.md) \| [Port number](explanation/port-number.md)                                                                                                                     |
 
 ## How this documentation is organized
 
