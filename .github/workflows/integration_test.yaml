@@ -7,8 +7,12 @@ on:
 
 jobs:
   integration-tests:
-    uses: 
+    uses:
       canonical/operator-workflows/.github/workflows/integration_test.yaml@main
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
     secrets: inherit
     with:
       juju-channel: 3.6/stable
@@ -16,10 +20,11 @@ jobs:
       pre-run-script: |
         -c "chmod +x tests/integration/pre_run_script.sh
         ./tests/integration/pre_run_script.sh"
-      self-hosted-runner: true
-      self-hosted-runner-label: "edge"
+      runs-on: ubuntu-24.04
       modules: '["test_charm", "test_proxy"]'
   allure-report:
     if: ${{ !cancelled() && github.event_name == 'schedule' }}
     needs: integration-tests
+    permissions:
+      contents: write
     uses: canonical/operator-workflows/.github/workflows/allure_report.yaml@main

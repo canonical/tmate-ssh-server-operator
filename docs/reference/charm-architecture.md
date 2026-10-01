@@ -6,7 +6,7 @@ that provides instant terminal sharing capabilities.
 The tmate SSH server application is built from source as an OCI image and runs as a systemd service on the machine.
 
 The charm provides the necessary connection details for a tmate client to connect to the tmate SSH server service
-via integration data.
+via integration data. The SSH port of the service has been set to  `10022` as port `22` is already used by Juju for SSH access.
 
 
 ```mermaid

@@ -3,7 +3,7 @@
 <!-- vale Canonical.007-Headings-sentence-case = YES -->
 
 A [Juju](https://juju.is/) [charm](https://documentation.ubuntu.com/juju/3.6/reference/charm/)
-deploying and managing [Tmate self-hosted server](https://github.com/tmate-io/tmate). tmate is an
+deploying and managing [Tmate self-hosted server](https://github.com/tmate-io/tmate). Tmate is an
 open source terminal multiplexer, providing instant terminal sharing capabilities.
 
 Tmate enables users to share their terminal session with other users over the internet, allowing
@@ -13,10 +13,30 @@ real-time.
 This charm provides the tmate SSH server service, which is paired with the tmate client to provide
 a self-hosted SSH relay server.
 
-For DevOps and SRE teams, this charm will make operating self hosted tmate SSH server simple and
-straightforward through Juju's clean interface. Allowing machine relations to the
-[Github runner](https://charmhub.io/github-runner), it supports SSH debug access to the runner VMs
-managed by the charm.
+For DevOps and SRE teams, this charm will make operating a self-hosted tmate SSH server
+straightforward through Juju's clean interface. Through its integration with the
+[GitHub runner](https://charmhub.io/github-runner) charm, it provides SSH debug access to the
+runner VMs managed by that charm.
+
+## In this documentation
+
+|                 |                                                                                                                                                                                                                       |
+|-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                                                                                      |
+| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Relation endpoints](reference/relations.md) \|   [Upgrade](how-to/upgrade.md) |
+| **Design**      | [Charm architecture](reference/charm-architecture.md)                                                                                                                   |
+
+## How this documentation is organized
+
+This documentation uses the [Diátaxis documentation structure](https://diataxis.fr/).
+
+- The [Tutorial](tutorial) takes you step-by-step through deploying the tmate SSH server charm and
+  sharing your first terminal session.
+- The [How-to guides](how-to) cover practical tasks such as retrieving the server configuration
+  for the tmate client and upgrading the charm.
+- [Reference](reference) provides technical details on actions, configurations, relation
+  endpoints, and the charm architecture.
+- [Explanation](explanation) includes context on design choices such as the SSH port number.
 
 ## Project and community
 
@@ -42,6 +62,4 @@ Thinking about using the tmate SSH server operator for your next project?
   1. [Actions](reference/actions.md)
   1. [Charm architecture](reference/charm-architecture.md)
   1. [Configurations](reference/configurations.md)
-  1. [Integrations](reference/integrations.md)
-1. [Explanation](explanation)
-  1. [Port Number](explanation/port-number.md)
+  1. [Integrations](reference/relations.md)
