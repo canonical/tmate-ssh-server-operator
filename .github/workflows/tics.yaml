@@ -24,7 +24,10 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies and linters
-        run: pip install tox flake8 pylint -r requirements.txt
+        # Test dependencies too: TICS runs pylint on tests/, which reports unresolved imports
+        run: >-
+          pip install tox flake8 pylint pytest pytest-asyncio pytest-operator "juju>=3,<4"
+          -r requirements.txt -r tests/unit/requirements.txt -r tests/integration/requirements.txt
       - name: Run unit tests with coverage
         run: |
           tox -e unit,coverage-report
