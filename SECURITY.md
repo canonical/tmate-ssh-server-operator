@@ -26,8 +26,8 @@ expect from you.
 
 The `Secscan` workflow scans the published charm (`latest/edge` on 22.04 and 24.04,
 `latest/stable`) and the `ghcr.io/canonical/tmate-ssh-server` image the charm runs, using
-Canonical's secscan service (Trivy). It runs after every publish to edge, weekly, and on
-demand, and fails when it finds a CVE that is not excluded.
+Canonical's secscan service (Trivy). It runs after every publish to `latest/edge` (pushes to `main`; `track/*` branches publish
+to other tracks, which this workflow does not scan), weekly, and on demand, and fails when it finds a CVE that is not excluded.
 
 Each `secscan-report-*` artifact contains `<artifact>.txt` (the authoritative verdict plus
 the CVE IDs secscan reported) and `<artifact>.report.html` (Trivy's detailed report with

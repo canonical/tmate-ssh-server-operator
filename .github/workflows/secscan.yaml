@@ -1,5 +1,5 @@
 # Scans the published tmate-ssh-server charm and the OCI image it runs with Canonical
-# secscan to meet SEC0025. Called after each publish to edge, and run weekly.
+# secscan to meet SEC0025. Called after each publish to latest/edge (main only), and run weekly.
 name: Secscan
 
 on:
