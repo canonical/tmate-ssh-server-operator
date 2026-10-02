@@ -20,4 +20,4 @@ jobs:
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
-    uses: ./.github/workflows/secscan.yaml
+    uses: ./.github/workflows/secscan.yaml # zizmor: ignore[self-repository]

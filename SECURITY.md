@@ -29,7 +29,11 @@ The `Secscan` workflow scans the published charm (`latest/edge` on 22.04 and 24.
 Canonical's secscan service (Trivy). It runs after every publish to edge, weekly, and on
 demand, and fails when it finds a CVE that is not excluded.
 
-When it fails, maintainers download the `secscan-report-*` artifacts and either fix the
+Each `secscan-report-*` artifact contains `<artifact>.txt` (the authoritative verdict plus
+the CVE IDs secscan reported) and `<artifact>.report.html` (Trivy's detailed report with
+package and severity).
+
+When it fails, maintainers download these artifacts and either fix the
 issue or open a draft [GitHub security advisory](../../security/advisories/new) recording
 the CVE, its severity and the remediation plan. A CVE accepted as a false positive or
 acceptable risk is added to `.github/secscan-exclusions/<artifact>.txt` with a
