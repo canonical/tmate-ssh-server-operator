@@ -21,3 +21,18 @@ assigned and coordinating the release of the fix.
 The [Ubuntu Security disclosure and embargo policy](https://ubuntu.com/security/disclosure-policy)
 contains more information about what you can expect when you contact us, and what we
 expect from you.
+
+## Vulnerability scanning
+
+The `Secscan` workflow scans the published charm (`latest/edge` on 22.04 and 24.04,
+`latest/stable`) and the `ghcr.io/canonical/tmate-ssh-server` image the charm runs, using
+Canonical's secscan service (Trivy). It runs after every publish to edge, weekly, and on
+demand, and fails when it finds a CVE that is not excluded.
+
+When it fails, maintainers download the `secscan-report-*` artifacts and either fix the
+issue or open a draft [GitHub security advisory](../../security/advisories/new) recording
+the CVE, its severity and the remediation plan. A CVE accepted as a false positive or
+acceptable risk is added to `.github/secscan-exclusions/<artifact>.txt` with a
+justification comment and a link to its advisory. High or critical exclusions need
+security team approval. The SSDLC cycle is set by `SSDLC_CYCLE` in the workflow and must
+be bumped each cycle.
