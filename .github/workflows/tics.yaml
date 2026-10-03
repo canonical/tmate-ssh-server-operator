@@ -35,7 +35,7 @@ jobs:
           mkdir .coverage
           mv coverage.xml .coverage/cobertura.xml
       - name: TICS GitHub Action
-        uses: tiobe/tics-github-action@v3
+        uses: tiobe/tics-github-action@v4
         with:
           mode: qserver
           project: tmate-ssh-server-operator
