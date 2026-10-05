@@ -263,3 +263,56 @@ def test__on_update_status_everything_ok(
     start_daemon_mock.assert_not_called()
     remove_stopped_containers_mock.assert_not_called()
     assert charm.unit.status.name == "active"
+
+
+def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
+    """
+    arrange: given an installed charm with existing keys and a mocked workload.
+    act: when the upgrade-charm event is emitted.
+    assert: the workload restarts without regenerating keys or reinstalling packages.
+    """
+    harness.begin()
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    install_keys_mock = MagicMock(spec=tmate.install_keys)
+    install_dependencies_mock = MagicMock(spec=tmate.install_dependencies)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "install_keys", install_keys_mock)
+    monkeypatch.setattr(tmate, "install_dependencies", install_dependencies_mock)
+
+    harness.charm.on.upgrade_charm.emit()
+
+    start_daemon_mock.assert_called_once_with(address="10.0.0.10", restart=True)
+    install_keys_mock.assert_not_called()
+    install_dependencies_mock.assert_not_called()
+    assert harness.charm.unit.status.name == "active"
+
+
+def test__on_upgrade_charm_defer(monkeypatch: pytest.MonkeyPatch, charm):
+    """
+    arrange: given a unit without an assigned address.
+    act: when upgrade-charm is handled.
+    assert: the event is deferred and the workload is not restarted.
+    """
+    monkeypatch.setattr(charm, "state", MagicMock(spec=State, ip_addr=None))
+    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    event = MagicMock(spec=ops.UpgradeCharmEvent)
+
+    charm._on_upgrade_charm(event)
+
+    event.defer.assert_called_once()
+    start_daemon_mock.assert_not_called()
+
+
+def test__on_upgrade_charm_error(monkeypatch: pytest.MonkeyPatch, charm):
+    """
+    arrange: given a workload that cannot restart.
+    act: when upgrade-charm is handled.
+    assert: the failure propagates and the unit does not become active.
+    """
+    monkeypatch.setattr(tmate, "start_daemon", MagicMock(side_effect=tmate.DaemonError))
+
+    with pytest.raises(tmate.DaemonError):
+        charm._on_upgrade_charm(MagicMock(spec=ops.UpgradeCharmEvent))
+
+    assert charm.unit.status.name == "maintenance"

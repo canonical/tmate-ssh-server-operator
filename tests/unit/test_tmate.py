@@ -520,3 +520,50 @@ def test_remove_stopped_containers_error(monkeypatch: pytest.MonkeyPatch):
 
     with pytest.raises(tmate.DockerError):
         tmate.remove_stopped_containers()
+
+
+@pytest.mark.parametrize("restart", [False, True])
+def test_start_daemon_refresh_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, restart: bool):
+    """
+    arrange: given a service unit that references the old image and mocked systemd calls.
+    act: when the daemon starts or restarts.
+    assert: the patched image is rendered and reloaded before the requested service action.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    unit_path.write_text("ExecStart=docker run ghcr.io/canonical/tmate-ssh-server:0.1.1")
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    systemd_mock = MagicMock()
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", systemd_mock.daemon_reload)
+    monkeypatch.setattr(tmate.systemd, "service_enable", systemd_mock.service_enable)
+    monkeypatch.setattr(tmate.systemd, "service_start", systemd_mock.service_start)
+    monkeypatch.setattr(tmate.systemd, "service_restart", systemd_mock.service_restart)
+    monkeypatch.setattr(tmate, "_wait_for", MagicMock())
+
+    tmate.start_daemon(address="10.0.0.10", restart=restart)
+
+    assert "ghcr.io/canonical/tmate-ssh-server:1.1" in unit_path.read_text()
+    assert "ghcr.io/canonical/tmate-ssh-server:0.1.1" not in unit_path.read_text()
+    expected_action = "service_restart" if restart else "service_start"
+    assert [call[0] for call in systemd_mock.mock_calls] == [
+        "daemon_reload",
+        "service_enable",
+        expected_action,
+    ]
+    getattr(systemd_mock, expected_action).assert_called_once_with(tmate.TMATE_SERVICE_NAME)
+
+
+def test_start_daemon_restart_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    """
+    arrange: given a systemd restart that fails.
+    act: when the daemon restarts after refreshing its unit.
+    assert: the failure is translated to a workload error.
+    """
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", tmp_path / "tmate.service")
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", MagicMock())
+    monkeypatch.setattr(tmate.systemd, "service_enable", MagicMock())
+    monkeypatch.setattr(
+        tmate.systemd, "service_restart", MagicMock(side_effect=tmate.systemd.SystemdError)
+    )
+
+    with pytest.raises(tmate.DaemonError, match="Failed to start"):
+        tmate.start_daemon(address="10.0.0.10", restart=True)

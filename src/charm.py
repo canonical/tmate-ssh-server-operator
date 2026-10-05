@@ -33,6 +33,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.sshdebug = ssh_debug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.upgrade_charm, self._on_upgrade_charm)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _on_install(self, event: ops.InstallEvent) -> None:
@@ -81,6 +82,28 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_upgrade_charm(self, event: ops.UpgradeCharmEvent) -> None:
+        """Apply the refreshed image to the existing workload.
+
+        Args:
+            event: The event emitted on upgrade-charm.
+
+        Raises:
+            DaemonError: if the workload cannot restart with the refreshed image.
+        """
+        if not self.state.ip_addr:
+            logger.warning("Unit address not assigned.")
+            event.defer()
+            return
+
+        self.unit.status = ops.MaintenanceStatus("Upgrading tmate-ssh-server daemon.")
+        try:
+            tmate.start_daemon(address=str(self.state.ip_addr), restart=True)
+        except tmate.DaemonError:
+            logger.exception("Failed to upgrade tmate-ssh-server daemon.")
+            raise
         self.unit.status = ops.ActiveStatus()
 
     def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:

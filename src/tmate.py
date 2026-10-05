@@ -230,11 +230,12 @@ def status() -> DaemonStatus:
     return DaemonStatus(running=True, status=status_str.decode("utf-8"))
 
 
-def start_daemon(address: str) -> None:
-    """Install unit files, enable and start daemon.
+def start_daemon(address: str, *, restart: bool = False) -> None:
+    """Install unit files, enable and start or restart daemon.
 
     Args:
         address: The IP address to bind to.
+        restart: Restart an existing service to apply the new unit file.
 
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
@@ -254,7 +255,10 @@ def start_daemon(address: str) -> None:
     try:
         systemd.daemon_reload()
         systemd.service_enable(TMATE_SERVICE_NAME)
-        systemd.service_start(TMATE_SERVICE_NAME)
+        if restart:
+            systemd.service_restart(TMATE_SERVICE_NAME)
+        else:
+            systemd.service_start(TMATE_SERVICE_NAME)
         _wait_for(partial(check_docker_container, container_name), timeout=60)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
