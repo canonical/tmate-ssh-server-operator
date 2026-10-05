@@ -281,9 +281,6 @@ def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
 
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
-    calls = MagicMock()
-    calls.attach_mock(start_daemon_mock, "start_daemon")
-    calls.attach_mock(remove_stopped_containers_mock, "remove_stopped_containers")
 
     harness.charm.on.upgrade_charm.emit()
 
@@ -291,7 +288,7 @@ def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
     install_keys_mock.assert_not_called()
     install_dependencies_mock.assert_not_called()
     assert harness.charm.unit.status.name == "active"
-    assert [call[0] for call in calls.mock_calls] == ["start_daemon", "remove_stopped_containers"]
+    remove_stopped_containers_mock.assert_not_called()
 
 
 def test__on_upgrade_charm_defer(monkeypatch: pytest.MonkeyPatch, charm):
@@ -320,23 +317,6 @@ def test__on_upgrade_charm_error(monkeypatch: pytest.MonkeyPatch, charm):
     monkeypatch.setattr(tmate, "start_daemon", MagicMock(side_effect=tmate.DaemonError))
 
     with pytest.raises(tmate.DaemonError):
-        charm._on_upgrade_charm(MagicMock(spec=ops.UpgradeCharmEvent))
-
-    assert charm.unit.status.name == "maintenance"
-
-
-def test__on_upgrade_charm_cleanup_error(monkeypatch: pytest.MonkeyPatch, charm):
-    """
-    arrange: given a restarted workload and a failed stopped-container cleanup.
-    act: when upgrade-charm is handled.
-    assert: the cleanup failure propagates and the unit does not become active.
-    """
-    monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
-    monkeypatch.setattr(
-        tmate, "remove_stopped_containers", MagicMock(side_effect=tmate.DockerError)
-    )
-
-    with pytest.raises(tmate.DockerError):
         charm._on_upgrade_charm(MagicMock(spec=ops.UpgradeCharmEvent))
 
     assert charm.unit.status.name == "maintenance"

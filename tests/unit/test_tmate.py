@@ -541,6 +541,7 @@ def test_start_daemon_refresh_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
 
     tmate.start_daemon(address="10.0.0.10", restart=restart)
 
+    assert "docker run --rm --name" in unit_path.read_text()
     assert "ghcr.io/canonical/tmate-ssh-server:1.1" in unit_path.read_text()
     assert "ghcr.io/canonical/tmate-ssh-server:0.1.1" not in unit_path.read_text()
     expected_action = "service_restart" if restart else "service_start"
