@@ -55,6 +55,29 @@ The images are defined in [tmate-ssh-server_rock](https://github.com/canonical/t
 They are published to the [Github Container registry](https://github.com/canonical/tmate-ssh-server-operator/pkgs/container/tmate-ssh-server).
 
 
+### Publishing an updated image
+
+The charm publication workflow does not publish the image referenced by the
+systemd service template. A maintainer with GHCR write access must publish the
+image before merging a change to that template's tag. From the repository root,
+after authenticating to GHCR with `rockcraft.skopeo login ghcr.io`, run:
+
+```bash
+cd tmate-ssh-server_rock
+rockcraft clean
+rockcraft pack
+rockcraft.skopeo copy \
+  oci-archive:tmate-ssh-server_1.1_amd64.rock \
+  docker://ghcr.io/canonical/tmate-ssh-server:1.1
+```
+
+Build from a clean Rockcraft environment to refresh Ubuntu packages and the
+Pebble snap, including its Go dependencies. Scan the resulting image before
+publishing, and verify that the published tag can be pulled before merging the
+charm change. Keep the rock version and service template tag aligned for future
+image updates.
+
+
 ## Juju events
 
 The following Juju [events](https://juju.is/docs/sdk/event) are observed and handled by the charm as follows:
