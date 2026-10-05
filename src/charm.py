@@ -92,6 +92,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         Raises:
             DaemonError: if the workload cannot restart with the refreshed image.
+            DockerError: if stopped containers cannot be removed.
         """
         if not self.state.ip_addr:
             logger.warning("Unit address not assigned.")
@@ -103,6 +104,11 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             tmate.start_daemon(address=str(self.state.ip_addr), restart=True)
         except tmate.DaemonError:
             logger.exception("Failed to upgrade tmate-ssh-server daemon.")
+            raise
+        try:
+            tmate.remove_stopped_containers()
+        except tmate.DockerError:
+            logger.exception("Failed to remove stopped containers after upgrade.")
             raise
         self.unit.status = ops.ActiveStatus()
 
