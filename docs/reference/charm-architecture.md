@@ -72,10 +72,9 @@ rockcraft.skopeo copy \
 ```
 
 Build from a clean Rockcraft environment to refresh Ubuntu packages and the
-Pebble snap, including its Go dependencies. Scan the resulting image before
-publishing, and verify that the published tag can be pulled before merging the
-charm change. Keep the rock version and service template tag aligned for future
-image updates.
+Pebble snap, including its Go dependencies. Verify that the published tag can
+be pulled before merging the charm change. Keep the rock version and service
+template tag aligned for future image updates.
 
 
 ## Juju events
