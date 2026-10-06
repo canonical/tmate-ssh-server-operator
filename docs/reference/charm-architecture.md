@@ -53,28 +53,9 @@ for more information.
 We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate SSH server. 
 The images are defined in [tmate-ssh-server_rock](https://github.com/canonical/tmate-ssh-server-operator/tree/main/tmate-ssh-server_rock).
 They are published to the [Github Container registry](https://github.com/canonical/tmate-ssh-server-operator/pkgs/container/tmate-ssh-server).
-
-
-### Publishing an updated image
-
-The charm publication workflow does not publish the image referenced by the
-`systemd` service template. A maintainer with GHCR write access must publish the
-image before merging a change to that template's tag. From the repository root,
-after authenticating to GHCR with `rockcraft.skopeo login ghcr.io`, run:
-
-```bash
-cd tmate-ssh-server_rock
-rockcraft clean
-rockcraft pack
-rockcraft.skopeo copy \
-  oci-archive:tmate-ssh-server_1.1_amd64.rock \
-  docker://ghcr.io/canonical/tmate-ssh-server:1.1
-```
-
-Build from a clean Rockcraft environment to refresh Ubuntu packages and the
-Pebble snap, including its Go dependencies. Verify that the published tag can
-be pulled before merging the charm change. Keep the rock version and service
-template tag aligned for future image updates.
+The `systemd` service template references a fixed image tag. The charm publication workflow does
+not publish this image; maintainers publish it manually before changing the tag, as described in
+[CONTRIBUTING.md](https://github.com/canonical/tmate-ssh-server-operator/blob/main/CONTRIBUTING.md).
 
 
 ## Juju events
