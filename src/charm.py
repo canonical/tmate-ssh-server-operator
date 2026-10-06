@@ -90,8 +90,8 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         Raises:
             DaemonError: if the workload cannot restart with the refreshed image.
         """
-        # Without an address, install has not completed; its deferred event
-        # renders the refreshed image when it eventually starts the daemon.
+        # Juju reports no address before the machine's network is up; a still-deferred
+        # install then starts the daemon from the refreshed unit once it has one.
         if not self.state.ip_addr:
             logger.warning("Unit address not assigned. Stop further execution of the hook.")
             return
