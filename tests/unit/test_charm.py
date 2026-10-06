@@ -291,11 +291,11 @@ def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
     remove_stopped_containers_mock.assert_not_called()
 
 
-def test__on_upgrade_charm_defer(monkeypatch: pytest.MonkeyPatch, charm):
+def test__on_upgrade_charm_no_address(monkeypatch: pytest.MonkeyPatch, charm):
     """
     arrange: given a unit without an assigned address.
     act: when upgrade-charm is handled.
-    assert: the event is deferred and the workload is not restarted.
+    assert: the event is not deferred and the workload is not restarted.
     """
     monkeypatch.setattr(charm, "state", MagicMock(spec=State, ip_addr=None))
     start_daemon_mock = MagicMock(spec=tmate.start_daemon)
@@ -304,7 +304,7 @@ def test__on_upgrade_charm_defer(monkeypatch: pytest.MonkeyPatch, charm):
 
     charm._on_upgrade_charm(event)
 
-    event.defer.assert_called_once()
+    event.defer.assert_not_called()
     start_daemon_mock.assert_not_called()
 
 

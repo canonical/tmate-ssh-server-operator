@@ -84,18 +84,16 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
         self.unit.status = ops.ActiveStatus()
 
-    def _on_upgrade_charm(self, event: ops.UpgradeCharmEvent) -> None:
+    def _on_upgrade_charm(self, _: ops.UpgradeCharmEvent) -> None:
         """Apply the refreshed image to the existing workload.
-
-        Args:
-            event: The event emitted on upgrade-charm.
 
         Raises:
             DaemonError: if the workload cannot restart with the refreshed image.
         """
+        # Without an address, install has not completed; its deferred event
+        # renders the refreshed image when it eventually starts the daemon.
         if not self.state.ip_addr:
-            logger.warning("Unit address not assigned.")
-            event.defer()
+            logger.warning("Unit address not assigned. Stop further execution of the hook.")
             return
 
         self.unit.status = ops.MaintenanceStatus("Upgrading tmate-ssh-server daemon.")
