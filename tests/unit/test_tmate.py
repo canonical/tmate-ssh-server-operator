@@ -549,6 +549,7 @@ def test_start_daemon_refresh_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     assert "docker run --rm --name" in unit_path.read_text()
     assert "ghcr.io/canonical/tmate-ssh-server:1.1" in unit_path.read_text()
     assert "ghcr.io/canonical/tmate-ssh-server:0.1.1" not in unit_path.read_text()
+    assert ("--name legacy0001 " in unit_path.read_text()) == restart
     expected_action = "service_restart" if restart else "service_start"
     expected_calls = ["daemon_reload", "service_enable", expected_action]
     if restart:
@@ -556,6 +557,49 @@ def test_start_daemon_refresh_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
         calls_mock.check_call.assert_called_once_with(["docker", "rm", "-f", "legacy0001"])
     assert [call[0] for call in calls_mock.mock_calls] == expected_calls
     getattr(calls_mock, expected_action).assert_called_once_with(tmate.TMATE_SERVICE_NAME)
+
+
+@pytest.mark.parametrize(
+    "restart_address, expect_restart",
+    [
+        pytest.param("10.0.0.10", False, id="unchanged unit"),
+        pytest.param("10.0.0.11", True, id="changed address"),
+    ],
+)
+def test_start_daemon_restart_only_on_change(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, restart_address: str, expect_restart: bool
+):
+    """
+    arrange: given a service unit installed by the current charm and mocked docker and systemd.
+    act: when the daemon restarts with the same or a different address.
+    assert: the workload is left running when the unit is unchanged, and is replaced otherwise.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    calls_mock = MagicMock()
+    monkeypatch.setattr(tmate.subprocess, "check_call", calls_mock.check_call)
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", calls_mock.daemon_reload)
+    monkeypatch.setattr(tmate.systemd, "service_enable", calls_mock.service_enable)
+    monkeypatch.setattr(tmate.systemd, "service_start", calls_mock.service_start)
+    monkeypatch.setattr(tmate.systemd, "service_restart", calls_mock.service_restart)
+    monkeypatch.setattr(tmate, "_wait_for", MagicMock())
+    tmate.start_daemon(address="10.0.0.10")
+    installed_unit = unit_path.read_text()
+    calls_mock.reset_mock()
+
+    tmate.start_daemon(address=restart_address, restart=True)
+
+    if expect_restart:
+        assert unit_path.read_text() != installed_unit
+        assert [call[0] for call in calls_mock.mock_calls] == [
+            "check_call",
+            "daemon_reload",
+            "service_enable",
+            "service_restart",
+        ]
+    else:
+        assert unit_path.read_text() == installed_unit
+        assert not calls_mock.mock_calls
 
 
 @pytest.mark.parametrize(

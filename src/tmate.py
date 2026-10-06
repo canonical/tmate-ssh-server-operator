@@ -232,23 +232,28 @@ def status() -> DaemonStatus:
 
 
 def start_daemon(address: str, *, restart: bool = False) -> None:
-    """Install unit files, enable and start or restart daemon.
+    """Install unit files, enable and start daemon, or restart it when its unit changed.
 
     Args:
         address: The IP address to bind to.
-        restart: Restart an existing service to apply the new unit file.
+        restart: Replace the running workload if the rendered unit differs from the installed
+            one; an unchanged unit leaves the workload running.
 
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
-    if restart:
-        # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
-        # docker client and leaves the old container holding the port.
-        _remove_service_container()
-    environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
-    container_name = "".join(
+    installed_content = (
+        TMATE_SSH_SERVER_SERVICE_PATH.read_text(encoding="utf-8")
+        if restart and TMATE_SSH_SERVER_SERVICE_PATH.exists()
+        else None
+    )
+    name_match = re.search(r"--name (\S+)", installed_content) if installed_content else None
+    previous_container = name_match.group(1) if name_match else None
+    # Reusing the installed container name makes an unchanged unit render identically.
+    container_name = previous_container or "".join(
         secrets.choice(string.ascii_lowercase + string.digits) for _ in range(10)
     )
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
         NAME=container_name,
         WORKDIR=WORK_DIR,
@@ -256,6 +261,16 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         PORT=PORT,
         ADDRESS=address,
     )
+    if service_content == installed_content:
+        logger.info("tmate-ssh-server unit unchanged, keeping the running workload.")
+        return
+    if previous_container:
+        # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
+        # docker client and leaves the old container holding the port.
+        try:
+            subprocess.check_call(["docker", "rm", "-f", previous_container])  # nosec
+        except subprocess.CalledProcessError as exc:
+            raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
@@ -270,24 +285,6 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
         raise DaemonError("Timed out waiting for tmate service to start.") from exc
-
-
-def _remove_service_container() -> None:
-    """Force-remove the container named in the installed service unit, if any.
-
-    Raises:
-        DaemonError: if the container could not be removed.
-    """
-    try:
-        service_content = TMATE_SSH_SERVER_SERVICE_PATH.read_text(encoding="utf-8")
-    except FileNotFoundError:
-        return
-    if not (match := re.search(r"--name (\S+)", service_content)):
-        return
-    try:
-        subprocess.check_call(["docker", "rm", "-f", match.group(1)])  # nosec
-    except subprocess.CalledProcessError as exc:
-        raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
 
 
 @dataclasses.dataclass

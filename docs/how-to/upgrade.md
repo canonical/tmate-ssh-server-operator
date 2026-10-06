@@ -8,7 +8,8 @@ juju refresh tmate-ssh-server
 
 The charm is stateless and does not rely on storage such as databases, therefore there is no additional work beyond upgrading the charm revision.
 
-The upgrade hook removes the running workload container, reloads the `systemd`
-service and restarts the workload using the image referenced by the new charm
-revision. Existing SSH host keys are preserved.
-The restart interrupts active tmate sessions; schedule the upgrade accordingly.
+When the new charm revision changes the workload's `systemd` service, for
+example its image, the upgrade hook removes the running workload container and
+restarts the workload with the new service. Existing SSH host keys are preserved.
+This restart interrupts active tmate sessions; schedule such upgrades accordingly.
+Upgrades that leave the service unchanged keep the workload running.
