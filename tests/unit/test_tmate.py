@@ -583,6 +583,8 @@ def test_start_daemon_restart_only_on_change(
     monkeypatch.setattr(tmate.systemd, "service_start", calls_mock.service_start)
     monkeypatch.setattr(tmate.systemd, "service_restart", calls_mock.service_restart)
     monkeypatch.setattr(tmate, "_wait_for", MagicMock())
+    monkeypatch.setattr(tmate, "check_docker_container", MagicMock(return_value=True))
+    monkeypatch.setattr(tmate.systemd, "service_running", MagicMock(return_value=True))
     tmate.start_daemon(address="10.0.0.10")
     installed_unit = unit_path.read_text()
     calls_mock.reset_mock()
@@ -600,6 +602,50 @@ def test_start_daemon_restart_only_on_change(
     else:
         assert unit_path.read_text() == installed_unit
         assert not calls_mock.mock_calls
+
+
+@pytest.mark.parametrize(
+    "container_running, service_running",
+    [
+        pytest.param(False, True, id="container stopped"),
+        pytest.param(True, False, id="service stopped"),
+    ],
+)
+def test_start_daemon_restart_unchanged_unhealthy(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    container_running: bool,
+    service_running: bool,
+):
+    """
+    arrange: given an unchanged service unit whose workload is down, as after a failed upgrade.
+    act: when the daemon restarts again.
+    assert: the workload is restarted instead of being skipped.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    calls_mock = MagicMock()
+    monkeypatch.setattr(tmate.subprocess, "check_call", calls_mock.check_call)
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", calls_mock.daemon_reload)
+    monkeypatch.setattr(tmate.systemd, "service_enable", calls_mock.service_enable)
+    monkeypatch.setattr(tmate.systemd, "service_start", calls_mock.service_start)
+    monkeypatch.setattr(tmate.systemd, "service_restart", calls_mock.service_restart)
+    monkeypatch.setattr(tmate, "_wait_for", MagicMock())
+    tmate.start_daemon(address="10.0.0.10")
+    installed_unit = unit_path.read_text()
+    calls_mock.reset_mock()
+    monkeypatch.setattr(tmate, "check_docker_container", MagicMock(return_value=container_running))
+    monkeypatch.setattr(tmate.systemd, "service_running", MagicMock(return_value=service_running))
+
+    tmate.start_daemon(address="10.0.0.10", restart=True)
+
+    assert unit_path.read_text() == installed_unit
+    assert [call[0] for call in calls_mock.mock_calls] == [
+        "check_call",
+        "daemon_reload",
+        "service_enable",
+        "service_restart",
+    ]
 
 
 @pytest.mark.parametrize(

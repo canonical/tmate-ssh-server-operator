@@ -4,6 +4,8 @@
 """Integration tests for upgrading the tmate-ssh-server charm."""
 
 import logging
+import re
+from pathlib import Path
 
 from juju.application import Application
 from juju.model import Model
@@ -49,6 +51,10 @@ async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str,
     )
     assert retcode == 0, f"Error reading service unit, {stdout}, {stderr}"
     assert image in stdout, "Running image does not match the service unit"
+    template = Path("templates/tmate-ssh-server.service.j2").read_text(encoding="utf-8")
+    expected_image = re.search(r"ghcr\.io/canonical/tmate-ssh-server:\S+", template)
+    assert expected_image, "Image not found in the service template"
+    assert image == expected_image.group(0), "Running image is not the charm's image"
     retcode, stdout, stderr = await ops_test.juju(
         "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )

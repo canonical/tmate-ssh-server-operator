@@ -236,8 +236,8 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
 
     Args:
         address: The IP address to bind to.
-        restart: Replace the running workload if the rendered unit differs from the installed
-            one; an unchanged unit leaves the workload running.
+        restart: Replace the workload if the rendered unit differs from the installed one or
+            the workload is not running; a running workload with an unchanged unit is kept.
 
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
@@ -261,7 +261,12 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         PORT=PORT,
         ADDRESS=address,
     )
-    if service_content == installed_content:
+    # A failed earlier restart can leave an unchanged unit without a workload; recover it then.
+    if (
+        service_content == installed_content
+        and check_docker_container(container_name)
+        and systemd.service_running(TMATE_SERVICE_NAME)
+    ):
         logger.info("tmate-ssh-server unit unchanged, keeping the running workload.")
         return
     if previous_container:
