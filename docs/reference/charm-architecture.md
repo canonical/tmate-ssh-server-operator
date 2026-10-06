@@ -53,7 +53,7 @@ for more information.
 We use [Rockcraft](https://canonical-rockcraft.readthedocs-hosted.com/en/latest/) to build OCI images for tmate SSH server. 
 The images are defined in [tmate-ssh-server_rock](https://github.com/canonical/tmate-ssh-server-operator/tree/main/tmate-ssh-server_rock).
 They are published to the [Github Container registry](https://github.com/canonical/tmate-ssh-server-operator/pkgs/container/tmate-ssh-server).
-The `systemd` service template references a fixed image tag. The charm publication workflow does
+The charm runs a fixed image tag, set by `IMAGE` in `src/tmate.py`. The charm publication workflow does
 not publish this image; maintainers publish it manually before changing the tag, as described in
 [CONTRIBUTING.md](https://github.com/canonical/tmate-ssh-server-operator/blob/main/CONTRIBUTING.md).
 
@@ -67,7 +67,7 @@ the charm installs the necessary tmate SSH server's dependencies, setups ssh key
 which can be used by a tmate client to connect to the server.
 2. [update-status](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#update-status): This is a regular status check. The charm
 checks if the tmate SSH server is still running and restarts it if it is not.
-3. `upgrade-charm`: The charm renders the `systemd` service for the new charm revision. If it differs from the installed service, the charm removes the running workload container, rewrites and reloads the service, and restarts the workload; otherwise the workload keeps running. The container is removed explicitly because tmate does not exit on the stop signal `systemd` sends. SSH host keys are preserved; a restart interrupts active sessions.
+3. `upgrade-charm`: The charm renders the `systemd` service for the new charm revision. If it differs from the installed service, or the workload is not running, the charm pulls the image, removes the running workload container, rewrites and reloads the service, and restarts the workload; otherwise the workload keeps running. The container is removed explicitly because tmate does not exit on the stop signal `systemd` sends. SSH host keys are preserved; a restart interrupts active sessions.
 4. `get-server-config-action`: This is an [action event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#action-actiont)  triggered by the user
 to get the current server connection configuration (`tmate.conf`), which can be used by a tmate client to connect to the server.
 5. `ssh-debug-relation-joined`: This is a [relation joined event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#endpoint-relation-joined) that fires when 

@@ -10,7 +10,7 @@ WorkingDirectory={{ WORKDIR }}
 ExecStart=docker run --rm --name {{ NAME }} --user root \
     --net=host --cap-add SYS_ADMIN -v {{ KEYS_DIR }}:/keys \
     --entrypoint=/srv/tmate-ssh-server/tmate-ssh-server \
-    --env SSH_KEYS_PATH=/keys ghcr.io/canonical/tmate-ssh-server:1.1 \
+    --env SSH_KEYS_PATH=/keys {{ IMAGE }} \
     -A -h {{ ADDRESS }} -p {{ PORT }} -k /keys
 
 [Install]

@@ -40,6 +40,8 @@ ED25519_PUB_KEY_PATH = KEYS_DIR / "ssh_host_ed25519_key.pub"
 TMATE_SSH_SERVER_SERVICE_PATH = Path("/etc/systemd/system/tmate-ssh-server.service")
 DOCKER_DAEMON_CONFIG_PATH = Path("/etc/docker/daemon.json")
 TMATE_SERVICE_NAME = "tmate-ssh-server"
+# Published manually and kept equal to the rock version; see CONTRIBUTING.md.
+IMAGE = "ghcr.io/canonical/tmate-ssh-server:1.1"
 
 USER = "ubuntu"
 GROUP = "ubuntu"
@@ -260,6 +262,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         KEYS_DIR=KEYS_DIR,
         PORT=PORT,
         ADDRESS=address,
+        IMAGE=IMAGE,
     )
     # A failed earlier restart can leave an unchanged unit without a workload; recover it then.
     if (
@@ -270,12 +273,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         logger.info("tmate-ssh-server unit unchanged, keeping the running workload.")
         return
     if previous_container:
-        # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
-        # docker client and leaves the old container holding the port.
-        try:
-            subprocess.check_call(["docker", "rm", "-f", previous_container])  # nosec
-        except subprocess.CalledProcessError as exc:
-            raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
+        _replace_container(previous_container)
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
@@ -290,6 +288,29 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
         raise DaemonError("Timed out waiting for tmate service to start.") from exc
+
+
+def _replace_container(previous_container: str) -> None:
+    """Make IMAGE available locally, then force-remove the previous workload container.
+
+    Args:
+        previous_container: The name of the container to remove.
+
+    Raises:
+        DaemonError: if the image could not be pulled or the container could not be removed.
+    """
+    # Fetch the image while the old workload still serves, so a registry failure aborts the
+    # upgrade instead of leaving the unit without a workload.
+    try:
+        subprocess.check_call(["docker", "pull", IMAGE])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DaemonError(f"Failed to pull {IMAGE}.") from exc
+    # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
+    # docker client and leaves the old container holding the port.
+    try:
+        subprocess.check_call(["docker", "rm", "-f", previous_container])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
 
 
 @dataclasses.dataclass

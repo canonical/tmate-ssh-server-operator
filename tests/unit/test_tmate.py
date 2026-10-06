@@ -8,7 +8,7 @@ import subprocess  # nosec
 import textwrap
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 from charms.operator_libs_linux.v0 import apt
@@ -553,8 +553,11 @@ def test_start_daemon_refresh_unit(monkeypatch: pytest.MonkeyPatch, tmp_path: Pa
     expected_action = "service_restart" if restart else "service_start"
     expected_calls = ["daemon_reload", "service_enable", expected_action]
     if restart:
-        expected_calls.insert(0, "check_call")
-        calls_mock.check_call.assert_called_once_with(["docker", "rm", "-f", "legacy0001"])
+        expected_calls[:0] = ["check_call", "check_call"]
+        assert calls_mock.check_call.call_args_list == [
+            call(["docker", "pull", tmate.IMAGE]),
+            call(["docker", "rm", "-f", "legacy0001"]),
+        ]
     assert [call[0] for call in calls_mock.mock_calls] == expected_calls
     getattr(calls_mock, expected_action).assert_called_once_with(tmate.TMATE_SERVICE_NAME)
 
@@ -594,6 +597,7 @@ def test_start_daemon_restart_only_on_change(
     if expect_restart:
         assert unit_path.read_text() != installed_unit
         assert [call[0] for call in calls_mock.mock_calls] == [
+            "check_call",
             "check_call",
             "daemon_reload",
             "service_enable",
@@ -642,6 +646,7 @@ def test_start_daemon_restart_unchanged_unhealthy(
     assert unit_path.read_text() == installed_unit
     assert [call[0] for call in calls_mock.mock_calls] == [
         "check_call",
+        "check_call",
         "daemon_reload",
         "service_enable",
         "service_restart",
@@ -684,33 +689,43 @@ def test_start_daemon_restart_without_container(
 
 
 @pytest.mark.parametrize(
-    "check_call_error, service_restart_error, match",
+    "check_call_effects, service_restart_error, match",
     [
         pytest.param(
-            tmate.subprocess.CalledProcessError(returncode=1, cmd="docker"),
+            [tmate.subprocess.CalledProcessError(returncode=1, cmd="docker")],
+            None,
+            "Failed to pull",
+            id="image pull fails",
+        ),
+        pytest.param(
+            [None, tmate.subprocess.CalledProcessError(returncode=1, cmd="docker")],
             None,
             "Failed to remove",
             id="container removal fails",
         ),
-        pytest.param(None, tmate.systemd.SystemdError, "Failed to start", id="restart fails"),
+        pytest.param(
+            [None, None], tmate.systemd.SystemdError, "Failed to start", id="restart fails"
+        ),
     ],
 )
 def test_start_daemon_restart_error(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
-    check_call_error: Exception | None,
+    check_call_effects: list[Exception | None],
     service_restart_error: type[Exception] | None,
     match: str,
 ):
     """
-    arrange: given a legacy container whose removal fails, or a systemd restart that fails.
+    arrange: given an image pull, container removal or systemd restart that fails.
     act: when the daemon restarts after refreshing its unit.
-    assert: the failure is translated to a workload error.
+    assert: the failure is translated to a workload error, and a failure before the old
+        container is removed leaves its unit untouched.
     """
     unit_path = tmp_path / "tmate.service"
     unit_path.write_text("ExecStart=docker run --name legacy0001 image")
     monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
-    monkeypatch.setattr(tmate.subprocess, "check_call", MagicMock(side_effect=check_call_error))
+    check_call_mock = MagicMock(side_effect=check_call_effects)
+    monkeypatch.setattr(tmate.subprocess, "check_call", check_call_mock)
     monkeypatch.setattr(tmate.systemd, "daemon_reload", MagicMock())
     monkeypatch.setattr(tmate.systemd, "service_enable", MagicMock())
     monkeypatch.setattr(
@@ -719,3 +734,7 @@ def test_start_daemon_restart_error(
 
     with pytest.raises(tmate.DaemonError, match=match):
         tmate.start_daemon(address="10.0.0.10", restart=True)
+
+    assert check_call_mock.call_count == len(check_call_effects)
+    if check_call_effects[-1] is not None:
+        assert unit_path.read_text() == "ExecStart=docker run --name legacy0001 image"

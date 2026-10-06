@@ -4,8 +4,6 @@
 """Integration tests for upgrading the tmate-ssh-server charm."""
 
 import logging
-import re
-from pathlib import Path
 
 from juju.application import Application
 from juju.model import Model
@@ -13,16 +11,19 @@ from juju.unit import Unit
 from ops import ActiveStatus
 from pytest_operator.plugin import OpsTest
 
-from tmate import TMATE_SSH_SERVER_SERVICE_PATH
+from tmate import IMAGE, TMATE_SSH_SERVER_SERVICE_PATH
 
 from .helpers import wait_for
 
 logger = logging.getLogger(__name__)
 
+# Edge revisions built before the upgrade fix, running the legacy 0.1.1 image, by series.
+BASELINE_REVISIONS = {"jammy": 43, "noble": 44}
+
 
 async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str, codename: str):
     """
-    arrange: given a running unit deployed from the published edge charm.
+    arrange: given a running unit deployed from a published charm revision with a legacy image.
     act: when the unit is refreshed to the charm under test, then refreshed to it again.
     assert: one container runs the image from the new unit with no leftovers, and the second
         refresh, which does not change the unit, keeps that container running.
@@ -31,10 +32,16 @@ async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str,
         "tmate-ssh-server",
         application_name="tmate-upgrade",
         channel="latest/edge",
+        revision=BASELINE_REVISIONS[codename],
         series=codename,
     )
     await model.wait_for_idle(apps=[app.name], status=ActiveStatus.name)
     unit: Unit = app.units[0]
+    retcode, stdout, stderr = await ops_test.juju(
+        "ssh", unit.entity_id, "--", "docker ps --format '{{.Image}}'"
+    )
+    assert retcode == 0, f"Error running docker ps command, {stdout}, {stderr}"
+    assert IMAGE not in stdout.split(), "Baseline already runs the charm's image"
 
     await _refresh(model, app, charm)
 
@@ -51,10 +58,7 @@ async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str,
     )
     assert retcode == 0, f"Error reading service unit, {stdout}, {stderr}"
     assert image in stdout, "Running image does not match the service unit"
-    template = Path("templates/tmate-ssh-server.service.j2").read_text(encoding="utf-8")
-    expected_image = re.search(r"ghcr\.io/canonical/tmate-ssh-server:\S+", template)
-    assert expected_image, "Image not found in the service template"
-    assert image == expected_image.group(0), "Running image is not the charm's image"
+    assert image == IMAGE, "Running image is not the charm's image"
     retcode, stdout, stderr = await ops_test.juju(
         "ssh", unit.entity_id, "--", "systemctl --quiet is-active tmate-ssh-server"
     )

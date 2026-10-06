@@ -11,12 +11,12 @@ juju deploy ./tmate-ssh-server-operator_ubuntu-22.04-amd64.charm \
 ## Publish the tmate SSH server image
 
 The charm publication workflow does not publish the image referenced by
-`templates/tmate-ssh-server.service.j2`. A maintainer with write access to the
-GitHub Container registry package must publish it before merging a change to
-that template's tag.
+`IMAGE` in `src/tmate.py`. A maintainer with write access to the GitHub
+Container registry package must publish it before merging a change to that
+tag.
 
-1. Set the `version` in `tmate-ssh-server_rock/rockcraft.yaml` and the image tag
-   in the service template to the same new value.
+1. Set the `version` in `tmate-ssh-server_rock/rockcraft.yaml` and the tag of
+   `IMAGE` in `src/tmate.py` to the same new value.
 2. Build the rock from a clean environment, so Ubuntu packages and the Pebble
    snap are refreshed:
 
