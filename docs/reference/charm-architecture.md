@@ -86,7 +86,7 @@ the charm installs the necessary tmate SSH server's dependencies, setups ssh key
 which can be used by a tmate client to connect to the server.
 2. [update-status](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#update-status): This is a regular status check. The charm
 checks if the tmate SSH server is still running and restarts it if it is not.
-3. `upgrade-charm`: The charm rewrites the `systemd` service with the current image tag, reloads `systemd`, and restarts the workload. SSH host keys are preserved; active sessions are interrupted.
+3. `upgrade-charm`: The charm removes the running workload container, rewrites the `systemd` service with the current image tag, reloads `systemd`, and restarts the workload. The container is removed explicitly because tmate does not exit on the stop signal `systemd` sends. SSH host keys are preserved; active sessions are interrupted.
 4. `get-server-config-action`: This is an [action event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#action-actiont)  triggered by the user
 to get the current server connection configuration (`tmate.conf`), which can be used by a tmate client to connect to the server.
 5. `ssh-debug-relation-joined`: This is a [relation joined event](https://canonical-juju.readthedocs-hosted.com/en/latest/user/reference/hook/#endpoint-relation-joined) that fires when 

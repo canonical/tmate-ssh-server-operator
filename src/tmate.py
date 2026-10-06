@@ -8,6 +8,7 @@ import dataclasses
 import hashlib
 import ipaddress
 import logging
+import re
 import secrets
 import string
 
@@ -240,6 +241,10 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
+    if restart:
+        # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
+        # docker client and leaves the old container holding the port.
+        _remove_service_container()
     environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     container_name = "".join(
         secrets.choice(string.ascii_lowercase + string.digits) for _ in range(10)
@@ -265,6 +270,24 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
         raise DaemonError("Timed out waiting for tmate service to start.") from exc
+
+
+def _remove_service_container() -> None:
+    """Force-remove the container named in the installed service unit, if any.
+
+    Raises:
+        DaemonError: if the container could not be removed.
+    """
+    try:
+        service_content = TMATE_SSH_SERVER_SERVICE_PATH.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        return
+    if not (match := re.search(r"--name (\S+)", service_content)):
+        return
+    try:
+        subprocess.check_call(["docker", "rm", "-f", match.group(1)])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
 
 
 @dataclasses.dataclass
