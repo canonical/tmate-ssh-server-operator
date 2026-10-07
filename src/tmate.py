@@ -273,7 +273,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         logger.info("tmate-ssh-server unit unchanged, keeping the running workload.")
         return
     if previous_container:
-        _replace_container(previous_container)
+        _pull_image_and_remove_container(previous_container)
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
@@ -290,7 +290,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         raise DaemonError("Timed out waiting for tmate service to start.") from exc
 
 
-def _replace_container(previous_container: str) -> None:
+def _pull_image_and_remove_container(previous_container: str) -> None:
     """Make IMAGE available locally, then force-remove the previous workload container.
 
     Args:
