@@ -292,7 +292,8 @@ def _pull_image_and_remove_containers() -> None:
     """Pull IMAGE unless it is cached, then force-remove all tmate-ssh-server containers.
 
     Raises:
-        DaemonError: if the image could not be pulled or the containers could not be removed.
+        DaemonError: if the image could not be pulled or the containers could not be listed or
+            removed.
     """
     # Fetch the image while the old workload still serves, so a registry failure aborts the
     # upgrade instead of leaving the unit without a workload. A cached image is reused, so
@@ -316,13 +317,17 @@ def _pull_image_and_remove_containers() -> None:
         listing = subprocess.check_output(  # nosec
             ["docker", "ps", "--all", "--format", "{{.ID}} {{.Image}}"], text=True
         )
-        container_ids = [
-            container_id
-            for container_id, image in (line.split(maxsplit=1) for line in listing.splitlines())
-            if image_pattern.fullmatch(image)
-        ]
-        if container_ids:
-            subprocess.check_call(["docker", "rm", "-f", *container_ids])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DaemonError("Failed to list tmate-ssh-server containers.") from exc
+    container_ids = [
+        container_id
+        for container_id, image in (line.split(maxsplit=1) for line in listing.splitlines())
+        if image_pattern.fullmatch(image)
+    ]
+    if not container_ids:
+        return
+    try:
+        subprocess.check_call(["docker", "rm", "-f", *container_ids])  # nosec
     except subprocess.CalledProcessError as exc:
         raise DaemonError("Failed to remove the previous tmate-ssh-server containers.") from exc
 

@@ -722,7 +722,7 @@ def test_ensure_daemon_running_recovers_unchanged_unit(
     "failing_step, match",
     [
         pytest.param("pull", "Failed to pull", id="image pull fails"),
-        pytest.param("list", "Failed to remove", id="container listing fails"),
+        pytest.param("list", "Failed to list", id="container listing fails"),
         pytest.param("remove", "Failed to remove", id="container removal fails"),
         pytest.param("restart", "Failed to start", id="restart fails"),
     ],
