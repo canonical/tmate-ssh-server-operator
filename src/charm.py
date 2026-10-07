@@ -69,7 +69,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         try:
             self.unit.status = ops.MaintenanceStatus("Starting tmate-ssh-server daemon.")
-            tmate.start_daemon(address=str(self.state.ip_addr))
+            tmate.ensure_daemon_running(address=str(self.state.ip_addr))
         except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
@@ -98,7 +98,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.status = ops.MaintenanceStatus("Upgrading tmate-ssh-server daemon.")
         try:
-            tmate.start_daemon(address=str(self.state.ip_addr), restart=True)
+            tmate.ensure_daemon_running(address=str(self.state.ip_addr))
         except tmate.DaemonError:
             logger.exception("Failed to upgrade tmate-ssh-server daemon.")
             raise
@@ -119,7 +119,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
             logger.info("Will restart tmate-ssh-server daemon.")
             try:
-                tmate.start_daemon(address=str(self.state.ip_addr))
+                tmate.ensure_daemon_running(address=str(self.state.ip_addr))
             except tmate.DaemonError:
                 logger.exception("tmate-ssh-server daemon not active.")
                 raise

@@ -57,7 +57,7 @@ def test__on_install_daemon_error(
     charm: TmateSSHServerOperatorCharm,
 ):
     """
-    arrange: given mocked tmate start_daemon function that raises an exception.
+    arrange: given mocked tmate ensure_daemon_running function that raises an exception.
     act: when _on_install is called.
     assert: exceptions are re-raised.
     """
@@ -65,8 +65,10 @@ def test__on_install_daemon_error(
     monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
     mock_install_keys = MagicMock(spec=tmate.install_keys)
     monkeypatch.setattr(tmate, "install_keys", mock_install_keys)
-    mock_install_deps = MagicMock(spec=tmate.start_daemon, side_effect=[tmate.DaemonError])
-    monkeypatch.setattr(tmate, "start_daemon", mock_install_deps)
+    mock_install_deps = MagicMock(
+        spec=tmate.ensure_daemon_running, side_effect=[tmate.DaemonError]
+    )
+    monkeypatch.setattr(tmate, "ensure_daemon_running", mock_install_deps)
 
     with pytest.raises(tmate.DaemonError):
         charm._on_install(MagicMock(spec=ops.InstallEvent))
@@ -105,7 +107,7 @@ def test__on_install_error(
     mock_install_deps = MagicMock(spec=tmate.install_dependencies)
     monkeypatch.setattr(tmate, "install_dependencies", mock_install_deps)
     monkeypatch.setattr(tmate, "install_keys", MagicMock())
-    monkeypatch.setattr(tmate, "start_daemon", MagicMock())
+    monkeypatch.setattr(tmate, "ensure_daemon_running", MagicMock())
     monkeypatch.setattr(
         tmate, "get_fingerprints", MagicMock(side_effect=[tmate.IncompleteInitError])
     )
@@ -126,7 +128,9 @@ def test__on_install(
     """
     monkeypatch.setattr(tmate, "install_dependencies", MagicMock(spec=tmate.install_dependencies))
     monkeypatch.setattr(tmate, "install_keys", MagicMock(spec=tmate.install_keys))
-    monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
+    monkeypatch.setattr(
+        tmate, "ensure_daemon_running", MagicMock(spec=tmate.ensure_daemon_running)
+    )
     monkeypatch.setattr(tmate, "get_fingerprints", MagicMock(spec=tmate.get_fingerprints))
 
     mock_event = MagicMock(spec=ops.InstallEvent)
@@ -146,10 +150,10 @@ def test__on_update_status_ip_not_assigned(
     assert: the charm returns and calls no other functions.
     """
     status_mock = MagicMock(return_value=tmate.DaemonStatus(running=True, status=""))
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
     monkeypatch.setattr(tmate, "status", status_mock)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
     mock_state = MagicMock(spec=State)
@@ -160,7 +164,7 @@ def test__on_update_status_ip_not_assigned(
     charm._on_update_status(mock_event)
 
     status_mock.assert_not_called()
-    start_daemon_mock.assert_not_called()
+    ensure_daemon_running_mock.assert_not_called()
     remove_stopped_containers_mock.assert_not_called()
 
 
@@ -172,22 +176,22 @@ def test__on_update_status_error(
     arrange: given multiple scenarios.
       1. a monkeypatched tmate.status that raises an error.
       2. a monkeypatched tmate.status that returns False for running and
-       start_daemon that raises an error.
+       ensure_daemon_running that raises an error.
     act: when _on_update_status is called.
     assert: the errors are not caught
     """
     # 1. tmate.status raises an error
     status_mock = MagicMock(side_effect=tmate.DaemonError)
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
     monkeypatch.setattr(tmate, "status", status_mock)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
 
     with pytest.raises(tmate.DaemonError):
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
-    # 2. tmate.is_running returns False for running and start_daemon raises an error
+    # 2. tmate.is_running returns False for running and ensure_daemon_running raises an error
     status_mock.side_effect = [tmate.DaemonStatus(running=False, status="")]
-    start_daemon_mock.side_effect = tmate.DaemonError
+    ensure_daemon_running_mock.side_effect = tmate.DaemonError
 
     with pytest.raises(tmate.DaemonError):
         charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
@@ -206,7 +210,9 @@ def test__on_update_status_remove_stopped_containers_error(
     monkeypatch.setattr(
         tmate, "status", MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
     )
-    monkeypatch.setattr(tmate, "start_daemon", MagicMock(spec=tmate.start_daemon))
+    monkeypatch.setattr(
+        tmate, "ensure_daemon_running", MagicMock(spec=tmate.ensure_daemon_running)
+    )
     monkeypatch.setattr(
         tmate, "remove_stopped_containers", MagicMock(side_effect=tmate.DockerError)
     )
@@ -228,15 +234,15 @@ def test__on_update_status_restart_daemon(
         stopped docker containers are removed.
     """
     status_mock = MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
     monkeypatch.setattr(tmate, "status", status_mock)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
     charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
-    start_daemon_mock.assert_called_once()
+    ensure_daemon_running_mock.assert_called_once_with(address=str(charm.state.ip_addr))
     remove_stopped_containers_mock.assert_called_once()
     assert charm.unit.status.name == "active"
 
@@ -252,15 +258,15 @@ def test__on_update_status_everything_ok(
         stopped docker containers are not removed.
     """
     status_mock = MagicMock(return_value=tmate.DaemonStatus(running=True, status=""))
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
     remove_stopped_containers_mock = MagicMock(spec=tmate.remove_stopped_containers)
     monkeypatch.setattr(tmate, "status", status_mock)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
     monkeypatch.setattr(tmate, "remove_stopped_containers", remove_stopped_containers_mock)
 
     charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
 
-    start_daemon_mock.assert_not_called()
+    ensure_daemon_running_mock.assert_not_called()
     remove_stopped_containers_mock.assert_not_called()
     assert charm.unit.status.name == "active"
 
@@ -272,10 +278,10 @@ def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
     assert: the workload restarts without regenerating keys or reinstalling packages.
     """
     harness.begin()
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
     install_keys_mock = MagicMock(spec=tmate.install_keys)
     install_dependencies_mock = MagicMock(spec=tmate.install_dependencies)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
     monkeypatch.setattr(tmate, "install_keys", install_keys_mock)
     monkeypatch.setattr(tmate, "install_dependencies", install_dependencies_mock)
 
@@ -284,7 +290,7 @@ def test__on_upgrade_charm(monkeypatch: pytest.MonkeyPatch, harness):
 
     harness.charm.on.upgrade_charm.emit()
 
-    start_daemon_mock.assert_called_once_with(address="10.0.0.10", restart=True)
+    ensure_daemon_running_mock.assert_called_once_with(address="10.0.0.10")
     install_keys_mock.assert_not_called()
     install_dependencies_mock.assert_not_called()
     assert harness.charm.unit.status.name == "active"
@@ -298,14 +304,14 @@ def test__on_upgrade_charm_no_address(monkeypatch: pytest.MonkeyPatch, charm):
     assert: the event is not deferred and the workload is not restarted.
     """
     monkeypatch.setattr(charm, "state", MagicMock(spec=State, ip_addr=None))
-    start_daemon_mock = MagicMock(spec=tmate.start_daemon)
-    monkeypatch.setattr(tmate, "start_daemon", start_daemon_mock)
+    ensure_daemon_running_mock = MagicMock(spec=tmate.ensure_daemon_running)
+    monkeypatch.setattr(tmate, "ensure_daemon_running", ensure_daemon_running_mock)
     event = MagicMock(spec=ops.UpgradeCharmEvent)
 
     charm._on_upgrade_charm(event)
 
     event.defer.assert_not_called()
-    start_daemon_mock.assert_not_called()
+    ensure_daemon_running_mock.assert_not_called()
 
 
 def test__on_upgrade_charm_error(monkeypatch: pytest.MonkeyPatch, charm):
@@ -314,7 +320,7 @@ def test__on_upgrade_charm_error(monkeypatch: pytest.MonkeyPatch, charm):
     act: when upgrade-charm is handled.
     assert: the failure propagates and the unit does not become active.
     """
-    monkeypatch.setattr(tmate, "start_daemon", MagicMock(side_effect=tmate.DaemonError))
+    monkeypatch.setattr(tmate, "ensure_daemon_running", MagicMock(side_effect=tmate.DaemonError))
 
     with pytest.raises(tmate.DaemonError):
         charm._on_upgrade_charm(MagicMock(spec=ops.UpgradeCharmEvent))

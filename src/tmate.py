@@ -233,20 +233,21 @@ def status() -> DaemonStatus:
     return DaemonStatus(running=True, status=status_str.decode("utf-8"))
 
 
-def start_daemon(address: str, *, restart: bool = False) -> None:
-    """Install unit files, enable and start daemon, or restart it when its unit changed.
+def ensure_daemon_running(address: str) -> None:
+    """Run the tmate-ssh-server workload from the charm's current service unit.
+
+    A running workload whose unit is unchanged is kept. Otherwise the unit is installed and the
+    workload is (re)started, replacing any previous container.
 
     Args:
         address: The IP address to bind to.
-        restart: Replace the workload if the rendered unit differs from the installed one or
-            the workload is not running; a running workload with an unchanged unit is kept.
 
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
     installed_content = (
         TMATE_SSH_SERVER_SERVICE_PATH.read_text(encoding="utf-8")
-        if restart and TMATE_SSH_SERVER_SERVICE_PATH.exists()
+        if TMATE_SSH_SERVER_SERVICE_PATH.exists()
         else None
     )
     name_match = re.search(r"--name (\S+)", installed_content) if installed_content else None
@@ -264,7 +265,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
         ADDRESS=address,
         IMAGE=IMAGE,
     )
-    # A failed earlier restart can leave an unchanged unit without a workload; recover it then.
+    # A crash or a failed earlier restart can leave an unchanged unit without a workload.
     if (
         service_content == installed_content
         and check_docker_container(container_name)
@@ -278,10 +279,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
     try:
         systemd.daemon_reload()
         systemd.service_enable(TMATE_SERVICE_NAME)
-        if restart:
-            systemd.service_restart(TMATE_SERVICE_NAME)
-        else:
-            systemd.service_start(TMATE_SERVICE_NAME)
+        systemd.service_restart(TMATE_SERVICE_NAME)
         _wait_for(partial(check_docker_container, container_name), timeout=60)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
@@ -291,7 +289,7 @@ def start_daemon(address: str, *, restart: bool = False) -> None:
 
 
 def _pull_image_and_remove_container(previous_container: str) -> None:
-    """Make IMAGE available locally, then force-remove the previous workload container.
+    """Pull IMAGE unless it is cached, then force-remove the previous workload container.
 
     Args:
         previous_container: The name of the container to remove.
@@ -300,11 +298,19 @@ def _pull_image_and_remove_container(previous_container: str) -> None:
         DaemonError: if the image could not be pulled or the container could not be removed.
     """
     # Fetch the image while the old workload still serves, so a registry failure aborts the
-    # upgrade instead of leaving the unit without a workload.
-    try:
-        subprocess.check_call(["docker", "pull", IMAGE])  # nosec
-    except subprocess.CalledProcessError as exc:
-        raise DaemonError(f"Failed to pull {IMAGE}.") from exc
+    # upgrade instead of leaving the unit without a workload. A cached image is reused, so
+    # recovering a crashed workload does not depend on the registry.
+    cached = subprocess.run(  # nosec
+        ["docker", "image", "inspect", IMAGE],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if cached.returncode != 0:
+        try:
+            subprocess.check_call(["docker", "pull", IMAGE])  # nosec
+        except subprocess.CalledProcessError as exc:
+            raise DaemonError(f"Failed to pull {IMAGE}.") from exc
     # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
     # docker client and leaves the old container holding the port.
     try:
