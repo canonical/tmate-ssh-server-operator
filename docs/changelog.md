@@ -2,6 +2,12 @@
 
 This changelog documents user-relevant changes to the tmate SSH server charm.
 
+## 2026-10-07
+
+### Fixed
+
+- Remove tmate server containers that the charm did not start before restarting the workload, so they cannot keep the SSH port and block an upgrade.
+
 ## 2026-10-05
 
 ### Fixed
