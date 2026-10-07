@@ -8,6 +8,7 @@ import dataclasses
 import hashlib
 import ipaddress
 import logging
+import re
 import secrets
 import string
 
@@ -39,6 +40,8 @@ ED25519_PUB_KEY_PATH = KEYS_DIR / "ssh_host_ed25519_key.pub"
 TMATE_SSH_SERVER_SERVICE_PATH = Path("/etc/systemd/system/tmate-ssh-server.service")
 DOCKER_DAEMON_CONFIG_PATH = Path("/etc/docker/daemon.json")
 TMATE_SERVICE_NAME = "tmate-ssh-server"
+# Published manually and kept equal to the rock version; see CONTRIBUTING.md.
+IMAGE = "ghcr.io/canonical/tmate-ssh-server:1.1"
 
 USER = "ubuntu"
 GROUP = "ubuntu"
@@ -230,8 +233,11 @@ def status() -> DaemonStatus:
     return DaemonStatus(running=True, status=status_str.decode("utf-8"))
 
 
-def start_daemon(address: str) -> None:
-    """Install unit files, enable and start daemon.
+def ensure_daemon_running(address: str) -> None:
+    """Run the tmate-ssh-server workload from the charm's current service unit.
+
+    A running workload whose unit is unchanged is kept. Otherwise the unit is installed and the
+    workload is (re)started, replacing any previous container.
 
     Args:
         address: The IP address to bind to.
@@ -239,28 +245,78 @@ def start_daemon(address: str) -> None:
     Raises:
         DaemonError: if there was an error starting the tmate-ssh-server docker process.
     """
-    environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
-    container_name = "".join(
+    installed_content = (
+        TMATE_SSH_SERVER_SERVICE_PATH.read_text(encoding="utf-8")
+        if TMATE_SSH_SERVER_SERVICE_PATH.exists()
+        else None
+    )
+    name_match = re.search(r"--name (\S+)", installed_content) if installed_content else None
+    previous_container = name_match.group(1) if name_match else None
+    # Reusing the installed container name makes an unchanged unit render identically.
+    container_name = previous_container or "".join(
         secrets.choice(string.ascii_lowercase + string.digits) for _ in range(10)
     )
+    environment = jinja2.Environment(loader=jinja2.FileSystemLoader("templates"), autoescape=True)
     service_content = environment.get_template("tmate-ssh-server.service.j2").render(
         NAME=container_name,
         WORKDIR=WORK_DIR,
         KEYS_DIR=KEYS_DIR,
         PORT=PORT,
         ADDRESS=address,
+        IMAGE=IMAGE,
     )
+    # A crash or a failed earlier restart can leave an unchanged unit without a workload.
+    if (
+        service_content == installed_content
+        and check_docker_container(container_name)
+        and systemd.service_running(TMATE_SERVICE_NAME)
+    ):
+        logger.info("tmate-ssh-server unit unchanged, keeping the running workload.")
+        return
+    if previous_container:
+        _pull_image_and_remove_container(previous_container)
     TMATE_SSH_SERVER_SERVICE_PATH.write_text(service_content, encoding="utf-8")
     try:
         systemd.daemon_reload()
         systemd.service_enable(TMATE_SERVICE_NAME)
-        systemd.service_start(TMATE_SERVICE_NAME)
+        systemd.service_restart(TMATE_SERVICE_NAME)
         _wait_for(partial(check_docker_container, container_name), timeout=60)
         _wait_for(partial(systemd.service_running, TMATE_SERVICE_NAME), timeout=60 * 10)
     except systemd.SystemdError as exc:
         raise DaemonError("Failed to start tmate-ssh-server daemon.") from exc
     except TimeoutError as exc:
         raise DaemonError("Timed out waiting for tmate service to start.") from exc
+
+
+def _pull_image_and_remove_container(previous_container: str) -> None:
+    """Pull IMAGE unless it is cached, then force-remove the previous workload container.
+
+    Args:
+        previous_container: The name of the container to remove.
+
+    Raises:
+        DaemonError: if the image could not be pulled or the container could not be removed.
+    """
+    # Fetch the image while the old workload still serves, so a registry failure aborts the
+    # upgrade instead of leaving the unit without a workload. A cached image is reused, so
+    # recovering a crashed workload does not depend on the registry.
+    cached = subprocess.run(  # nosec
+        ["docker", "image", "inspect", IMAGE],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        check=False,
+    )
+    if cached.returncode != 0:
+        try:
+            subprocess.check_call(["docker", "pull", IMAGE])  # nosec
+        except subprocess.CalledProcessError as exc:
+            raise DaemonError(f"Failed to pull {IMAGE}.") from exc
+    # tmate ignores SIGTERM as the container's PID 1, so stopping the service only kills the
+    # docker client and leaves the old container holding the port.
+    try:
+        subprocess.check_call(["docker", "rm", "-f", previous_container])  # nosec
+    except subprocess.CalledProcessError as exc:
+        raise DaemonError("Failed to remove the previous tmate-ssh-server container.") from exc
 
 
 @dataclasses.dataclass

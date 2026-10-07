@@ -4,11 +4,12 @@
 """tmate-ssh-server charm tmate module unit tests."""
 
 # subprocess is used by tmate module. Security implications have been considered.
+import re
 import subprocess  # nosec
 import textwrap
 from pathlib import Path
 from tempfile import NamedTemporaryFile
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import pytest
 from charms.operator_libs_linux.v0 import apt
@@ -221,16 +222,18 @@ def test_status_error(monkeypatch: pytest.MonkeyPatch):
     assert "Failed to check tmate-ssh-server status." in str(exc.value)
 
 
-def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
+def test_ensure_daemon_running_daemon_reload_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     """
     arrange: given a monkeypatched systemd call that raises SystemdError.
-    act: when start_daemon is called.
+    act: when ensure_daemon_running is called.
     assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
-    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", tmp_path / "tmate.service")
     monkeypatch.setattr(
         tmate.systemd,
         "daemon_reload",
@@ -242,21 +245,23 @@ def test_start_daemon_daemon_reload_error(monkeypatch: pytest.MonkeyPatch):
         ),
     )
     with pytest.raises(tmate.DaemonError) as exc:
-        tmate.start_daemon(address="test")
+        tmate.ensure_daemon_running(address="test")
 
     assert "Failed to start tmate-ssh-server daemon." in str(exc.value)
 
 
-def test_start_daemon_systemd_service_timeout_error(monkeypatch: pytest.MonkeyPatch):
+def test_ensure_daemon_running_systemd_service_timeout_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     """
     arrange: given a monkeypatched _wait_for systemd service all that raises a timeout error.
-    act: when start_daemon is called.
+    act: when ensure_daemon_running is called.
     assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
-    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", tmp_path / "tmate.service")
     monkeypatch.setattr(
         tmate.systemd,
         "daemon_reload",
@@ -269,8 +274,8 @@ def test_start_daemon_systemd_service_timeout_error(monkeypatch: pytest.MonkeyPa
     )
     monkeypatch.setattr(
         tmate.systemd,
-        "service_start",
-        MagicMock(spec=tmate.systemd.service_start),
+        "service_restart",
+        MagicMock(spec=tmate.systemd.service_restart),
     )
 
     def wait_for_side_effect(*args, **kwargs):  # pylint: disable=unused-argument
@@ -296,12 +301,12 @@ def test_start_daemon_systemd_service_timeout_error(monkeypatch: pytest.MonkeyPa
     )
 
     with pytest.raises(tmate.DaemonError) as exc:
-        tmate.start_daemon(address="test")
+        tmate.ensure_daemon_running(address="test")
 
     assert "Timed out waiting for tmate service to start." in str(exc.value)
 
 
-def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
+def test_ensure_daemon_running_enable_error(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     """
     arrange: given a monkeypatched systemd call that raises SystemdError.
     act: when enable_daemon is called.
@@ -310,7 +315,7 @@ def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
-    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", tmp_path / "tmate.service")
     monkeypatch.setattr(
         tmate.systemd,
         "daemon_reload",
@@ -328,19 +333,21 @@ def test_start_daemon_enable_error(monkeypatch: pytest.MonkeyPatch):
     )
 
     with pytest.raises(tmate.DaemonError):
-        tmate.start_daemon(address="test")
+        tmate.ensure_daemon_running(address="test")
 
 
-def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
+def test_ensure_daemon_running_service_restart_error(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+):
     """
     arrange: given a monkeypatched systemd that raises SystemdError.
-    act: when start_daemon is called.
+    act: when ensure_daemon_running is called.
     assert: DaemonError is raised.
     """
     monkeypatch.setattr(tmate, "WORK_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "KEYS_DIR", MagicMock(spec=Path))
     monkeypatch.setattr(tmate, "CREATE_KEYS_SCRIPT_PATH", MagicMock(spec=Path))
-    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", MagicMock(spec=Path))
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", tmp_path / "tmate.service")
     monkeypatch.setattr(
         tmate.systemd, "daemon_reload", MagicMock(spec=tmate.systemd.daemon_reload)
     )
@@ -351,9 +358,9 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     )
     monkeypatch.setattr(
         tmate.systemd,
-        "service_start",
+        "service_restart",
         MagicMock(
-            spec=tmate.systemd.service_start,
+            spec=tmate.systemd.service_restart,
             side_effect=[
                 tmate.systemd.SystemdError,
             ],
@@ -361,7 +368,7 @@ def test_start_daemon_service_start_error(monkeypatch: pytest.MonkeyPatch):
     )
 
     with pytest.raises(tmate.DaemonError):
-        tmate.start_daemon(address="test")
+        tmate.ensure_daemon_running(address="test")
 
 
 @pytest.mark.parametrize(
@@ -520,3 +527,220 @@ def test_remove_stopped_containers_error(monkeypatch: pytest.MonkeyPatch):
 
     with pytest.raises(tmate.DockerError):
         tmate.remove_stopped_containers()
+
+
+def _mock_workload_calls(monkeypatch: pytest.MonkeyPatch, image_cached: bool) -> MagicMock:
+    """Record docker and systemd calls made by ensure_daemon_running on a single mock.
+
+    Args:
+        monkeypatch: The pytest monkeypatch fixture.
+        image_cached: Whether `docker image inspect` finds IMAGE locally.
+
+    Returns:
+        The parent mock whose mock_calls hold the ordered calls.
+    """
+    calls_mock = MagicMock()
+    calls_mock.run.return_value.returncode = 0 if image_cached else 1
+    monkeypatch.setattr(tmate.subprocess, "run", calls_mock.run)
+    monkeypatch.setattr(tmate.subprocess, "check_call", calls_mock.check_call)
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", calls_mock.daemon_reload)
+    monkeypatch.setattr(tmate.systemd, "service_enable", calls_mock.service_enable)
+    monkeypatch.setattr(tmate.systemd, "service_restart", calls_mock.service_restart)
+    monkeypatch.setattr(tmate, "_wait_for", MagicMock())
+    return calls_mock
+
+
+@pytest.mark.parametrize(
+    "installed_unit, expected_calls",
+    [
+        pytest.param(
+            None, ["daemon_reload", "service_enable", "service_restart"], id="fresh install"
+        ),
+        pytest.param(
+            "ExecStart=docker run --name legacy0001 --user root "
+            "ghcr.io/canonical/tmate-ssh-server:0.1.1",
+            [
+                "run",
+                "check_call",
+                "check_call",
+                "daemon_reload",
+                "service_enable",
+                "service_restart",
+            ],
+            id="legacy unit",
+        ),
+    ],
+)
+def test_ensure_daemon_running_installs_unit(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    installed_unit: str | None,
+    expected_calls: list[str],
+):
+    """
+    arrange: given no service unit, or one running a legacy container, and an uncached image.
+    act: when the daemon is ensured to be running.
+    assert: the patched image is rendered and the service restarted; a legacy container is
+        replaced after pulling the image, keeping its name.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    if installed_unit is not None:
+        unit_path.write_text(installed_unit)
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    calls_mock = _mock_workload_calls(monkeypatch, image_cached=False)
+
+    tmate.ensure_daemon_running(address="10.0.0.10")
+
+    assert "docker run --rm --name" in unit_path.read_text()
+    assert tmate.IMAGE in unit_path.read_text()
+    assert ("--name legacy0001 " in unit_path.read_text()) == (installed_unit is not None)
+    assert [call[0] for call in calls_mock.mock_calls] == expected_calls
+    if installed_unit is not None:
+        assert calls_mock.check_call.call_args_list == [
+            call(["docker", "pull", tmate.IMAGE]),
+            call(["docker", "rm", "-f", "legacy0001"]),
+        ]
+    calls_mock.service_restart.assert_called_once_with(tmate.TMATE_SERVICE_NAME)
+
+
+@pytest.mark.parametrize(
+    "address, expect_restart",
+    [
+        pytest.param("10.0.0.10", False, id="unchanged unit"),
+        pytest.param("10.0.0.11", True, id="changed address"),
+    ],
+)
+def test_ensure_daemon_running_restarts_only_on_change(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, address: str, expect_restart: bool
+):
+    """
+    arrange: given a service unit installed by the current charm and a healthy workload.
+    act: when the daemon is ensured to be running with the same or a different address.
+    assert: the workload is left running when the unit is unchanged, and is replaced otherwise.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    calls_mock = _mock_workload_calls(monkeypatch, image_cached=False)
+    monkeypatch.setattr(tmate, "check_docker_container", MagicMock(return_value=True))
+    monkeypatch.setattr(tmate.systemd, "service_running", MagicMock(return_value=True))
+    tmate.ensure_daemon_running(address="10.0.0.10")
+    installed_unit = unit_path.read_text()
+    calls_mock.reset_mock()
+
+    tmate.ensure_daemon_running(address=address)
+
+    if expect_restart:
+        assert unit_path.read_text() != installed_unit
+        assert [call[0] for call in calls_mock.mock_calls] == [
+            "run",
+            "check_call",
+            "check_call",
+            "daemon_reload",
+            "service_enable",
+            "service_restart",
+        ]
+    else:
+        assert unit_path.read_text() == installed_unit
+        assert not calls_mock.mock_calls
+
+
+@pytest.mark.parametrize(
+    "container_running, service_running, image_cached",
+    [
+        pytest.param(False, True, False, id="container down"),
+        pytest.param(True, False, False, id="service down"),
+        pytest.param(False, False, True, id="image cached"),
+    ],
+)
+def test_ensure_daemon_running_recovers_unchanged_unit(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    container_running: bool,
+    service_running: bool,
+    image_cached: bool,
+):
+    """
+    arrange: given an unchanged service unit whose workload is down.
+    act: when the daemon is ensured to be running.
+    assert: the workload is restarted, as needed after a crash or failed upgrade, pulling the
+        image only when it is not cached.
+    """
+    unit_path = tmp_path / "tmate-ssh-server.service"
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    calls_mock = _mock_workload_calls(monkeypatch, image_cached=image_cached)
+    tmate.ensure_daemon_running(address="10.0.0.10")
+    installed_unit = unit_path.read_text()
+    calls_mock.reset_mock()
+    monkeypatch.setattr(tmate, "check_docker_container", MagicMock(return_value=container_running))
+    monkeypatch.setattr(tmate.systemd, "service_running", MagicMock(return_value=service_running))
+
+    tmate.ensure_daemon_running(address="10.0.0.10")
+
+    assert unit_path.read_text() == installed_unit
+    pull_calls = [] if image_cached else ["check_call"]
+    assert [call[0] for call in calls_mock.mock_calls] == [
+        "run",
+        *pull_calls,
+        "check_call",
+        "daemon_reload",
+        "service_enable",
+        "service_restart",
+    ]
+    name_match = re.search(r"--name (\S+)", installed_unit)
+    assert name_match
+    assert calls_mock.check_call.call_args_list[-1] == call(
+        ["docker", "rm", "-f", name_match.group(1)]
+    )
+
+
+@pytest.mark.parametrize(
+    "check_call_effects, service_restart_error, match",
+    [
+        pytest.param(
+            [tmate.subprocess.CalledProcessError(returncode=1, cmd="docker")],
+            None,
+            "Failed to pull",
+            id="image pull fails",
+        ),
+        pytest.param(
+            [None, tmate.subprocess.CalledProcessError(returncode=1, cmd="docker")],
+            None,
+            "Failed to remove",
+            id="container removal fails",
+        ),
+        pytest.param(
+            [None, None], tmate.systemd.SystemdError, "Failed to start", id="restart fails"
+        ),
+    ],
+)
+def test_ensure_daemon_running_replace_error(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    check_call_effects: list[Exception | None],
+    service_restart_error: type[Exception] | None,
+    match: str,
+):
+    """
+    arrange: given a legacy unit, an uncached image and a failing replacement step.
+    act: when the daemon is ensured to be running.
+    assert: the failure is translated to a workload error, and a failure before the old
+        container is removed leaves its unit untouched.
+    """
+    unit_path = tmp_path / "tmate.service"
+    unit_path.write_text("ExecStart=docker run --name legacy0001 image")
+    monkeypatch.setattr(tmate, "TMATE_SSH_SERVER_SERVICE_PATH", unit_path)
+    monkeypatch.setattr(tmate.subprocess, "run", MagicMock(return_value=MagicMock(returncode=1)))
+    check_call_mock = MagicMock(side_effect=check_call_effects)
+    monkeypatch.setattr(tmate.subprocess, "check_call", check_call_mock)
+    monkeypatch.setattr(tmate.systemd, "daemon_reload", MagicMock())
+    monkeypatch.setattr(tmate.systemd, "service_enable", MagicMock())
+    monkeypatch.setattr(
+        tmate.systemd, "service_restart", MagicMock(side_effect=service_restart_error)
+    )
+
+    with pytest.raises(tmate.DaemonError, match=match):
+        tmate.ensure_daemon_running(address="10.0.0.10")
+
+    assert check_call_mock.call_count == len(check_call_effects)
+    if check_call_effects[-1] is not None:
+        assert unit_path.read_text() == "ExecStart=docker run --name legacy0001 image"
