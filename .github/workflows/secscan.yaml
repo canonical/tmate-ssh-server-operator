@@ -64,8 +64,8 @@ jobs:
         id: image
         if: matrix.kind == 'image'
         run: |
-          image="$(grep -oE 'ghcr\.io/canonical/tmate-ssh-server:[^[:space:]]+' templates/tmate-ssh-server.service.j2 | sort -u || true)"
-          [[ -n "$image" && "$image" != *$'\n'* ]] || { echo "::error::expected exactly one image reference in template, found: ${image:-none}"; exit 1; }
+          image="$(grep -oE 'ghcr\.io/canonical/tmate-ssh-server:[^"[:space:]]+' src/tmate.py | sort -u || true)"
+          [[ -n "$image" && "$image" != *$'\n'* ]] || { echo "::error::expected exactly one image reference in src/tmate.py, found: ${image:-none}"; exit 1; }
           echo "target=$image" >> "$GITHUB_OUTPUT"
           echo "version=${image##*:}" >> "$GITHUB_OUTPUT"
       - name: Scan
