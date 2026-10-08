@@ -23,10 +23,10 @@ BASELINE_REVISIONS = {"jammy": 43, "noble": 44}
 
 async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str, codename: str):
     """
-    arrange: given a running unit deployed from a published charm revision with a legacy image.
+    arrange: given a legacy unit from a published revision and an unmanaged tmate container.
     act: when the unit is refreshed to the charm under test, then refreshed to it again.
-    assert: one container runs the image from the new unit with no leftovers, and the second
-        refresh, which does not change the unit, keeps that container running.
+    assert: one container runs the image from the new unit, the unmanaged container is gone, and
+        the second refresh, which does not change the unit, keeps that container running.
     """
     app = await model.deploy(
         "tmate-ssh-server",
@@ -42,6 +42,15 @@ async def test_upgrade_running_unit(ops_test: OpsTest, model: Model, charm: str,
     )
     assert retcode == 0, f"Error running docker ps command, {stdout}, {stderr}"
     assert IMAGE not in stdout.split(), "Baseline already runs the charm's image"
+    # A tmate container started outside the charm, for example by hand, gets a Docker-generated
+    # name that the service unit does not track.
+    retcode, stdout, stderr = await ops_test.juju(
+        "ssh",
+        unit.entity_id,
+        "--",
+        "docker run --detach --entrypoint sleep ghcr.io/canonical/tmate-ssh-server:0.1.1 infinity",
+    )
+    assert retcode == 0, f"Error starting unmanaged tmate container, {stdout}, {stderr}"
 
     await _refresh(model, app, charm)
 
