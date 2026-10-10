@@ -1,0 +1,23 @@
+"DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
+"
+    arrange: given a model configured with squid proxy ip address.
+    act: when tmate charm is deployed.
+    assert: proxy log contains docker access.
+    ","51622","test_proxy","tests.integration","2026-10-10","passed","2026-10-10","","test_proxy","",""
+"
+    arrange: given a related machine charm and a tmate-ssh-server charm.
+    act: when ssh connection is requested.
+    assert: the connection is made successfully.
+    ","2953","test_ssh_connection","tests.integration","2026-10-10","passed","2026-10-10","","test_charm","",""
+"
+    arrange: given a tmate-ssh-server charm unit.
+    act: kill the docker process containing the service and
+     fast-forward to next update status event.
+    assert: the service has been restarted successfully.
+    ","29215","test_restart_of_inactive_service","tests.integration","2026-10-10","passed","2026-10-10","","test_charm","",""
+"
+    arrange: given a legacy unit from a published revision and an unmanaged tmate container.
+    act: when the unit is refreshed to the charm under test, then refreshed to it again.
+    assert: one container runs the image from the new unit, the unmanaged container is gone, and
+        the second refresh, which does not change the unit, keeps that container running.
+    ","163253","test_upgrade_running_unit","tests.integration","2026-10-10","passed","2026-10-10","","test_upgrade","",""
