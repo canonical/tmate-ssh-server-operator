@@ -1,0 +1,18 @@
+title: Tmate SSH Daemon Startup Audit
+id: 4c3d2e1f-0a9b-4837-bf6e-5d4c3b2a1f0e
+status: experimental
+description: >-
+  Audit record of the tmate SSH server daemon starting during charm installation.
+  Startup is a routine lifecycle event, so this rule is an audit trail rather than
+  an anomaly alert.
+author: Canonical
+logsource:
+  category: application
+  product: canonical.tmate-ssh-server
+detection:
+  selection:
+    owasp_event.event|startswith: 'sys_startup'
+  condition: selection
+falsepositives:
+  - None; sys_startup is emitted on a deliberate daemon start during installation
+level: informational

@@ -1,0 +1,18 @@
+title: Tmate Server Configuration Disclosed via Action
+id: 2a1b0c9d-8e7f-4615-9d4c-3b2a1f0e9d8c
+status: experimental
+description: >-
+  Detects use of the get-server-config Juju action, which discloses the tmate SSH
+  server host and SSH host-key fingerprints.
+author: Canonical
+logsource:
+  category: application
+  product: canonical.tmate-ssh-server
+detection:
+  selection:
+    owasp_event.event|startswith: 'authz_admin'
+    owasp_event.event|contains: 'get-server-config'
+  condition: selection
+falsepositives:
+  - Authorized operator retrieving the server configuration during maintenance
+level: high

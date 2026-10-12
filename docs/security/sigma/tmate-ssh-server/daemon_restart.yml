@@ -1,0 +1,18 @@
+title: Tmate SSH Daemon Unexpected Restart
+id: 3b2c1d0e-9f8a-4726-ae5d-4c3b2a1f0e9d
+status: experimental
+description: >-
+  Detects the charm self-healing the tmate SSH server daemon after finding it not
+  running during a status check. A restart outside a planned upgrade may indicate a
+  crash or tampering with the SSH relay service.
+author: Canonical
+logsource:
+  category: application
+  product: canonical.tmate-ssh-server
+detection:
+  selection:
+    owasp_event.event|startswith: 'sys_restart'
+  condition: selection
+falsepositives:
+  - Daemon restarted during a legitimate charm upgrade or maintenance window
+level: medium

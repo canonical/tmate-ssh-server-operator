@@ -24,7 +24,7 @@ runner VMs managed by that charm.
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                                                                                      |
 | **Operations**  | [Get server config](how-to/get-server-config.md) \| [Security logs](reference/security-logs.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Relation endpoints](reference/relations.md) \|   [Upgrade](how-to/upgrade.md) |
-| **Design**      | [Charm architecture](reference/charm-architecture.md)                                                                                                                   |
+| **Design**      | [Charm architecture](reference/charm-architecture.md) \| [Sigma detection rules](security/sigma/tmate-ssh-server/README.md)                                                                                                                   |
 
 ## How this documentation is organized
 
@@ -64,3 +64,4 @@ Thinking about using the tmate SSH server operator for your next project?
   1. [Configurations](reference/configurations.md)
   1. [Integrations](reference/relations.md)
   1. [Security logs](reference/security-logs.md)
+  1. [Sigma detection rules](security/sigma/tmate-ssh-server/README.md)
