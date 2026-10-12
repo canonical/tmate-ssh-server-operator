@@ -25,6 +25,7 @@ logsource:
   product: canonical.tmate-ssh-server
 detection:
   selection:
+    owasp_event.appid: 'canonical.tmate-ssh-server'
     owasp_event.event|startswith: 'sys_startup'
   condition: selection
 falsepositives:

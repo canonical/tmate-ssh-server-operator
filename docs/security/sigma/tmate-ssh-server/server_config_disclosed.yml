@@ -24,6 +24,7 @@ logsource:
   product: canonical.tmate-ssh-server
 detection:
   selection:
+    owasp_event.appid: 'canonical.tmate-ssh-server'
     owasp_event.event|startswith: 'authz_admin'
     owasp_event.event|contains: 'get-server-config'
   condition: selection

@@ -2,7 +2,7 @@
 
 Vendor-neutral [Sigma](https://sigmahq.io) rules for the security events emitted by
 the `tmate-ssh-server` charm (`appid: canonical.tmate-ssh-server`, `type: security`).
-Author once here; convert to your SIEM's query language with `sigma-cli` / pySigma.
+Author once here; convert to the query language of your SIEM with `sigma-cli` / pySigma.
 
 ## Field mapping (OWASP → Sigma selectors)
 
@@ -12,7 +12,7 @@ The `owasp-logger` library emits each event as a JSON object **nested under an
 | OWASP field | Sigma selector key | Example |
 | --- | --- | --- |
 | `event` | `owasp_event.event` | `owasp_event.event\|startswith: 'authz_admin'` |
-| `level` | `owasp_event.level` | `owasp_event.level: 'WARN'` |
+| `level` | `owasp_event.level` | `owasp_event.level: 'WARNING'` |
 | `appid` | `owasp_event.appid` / `logsource.product` | `canonical.tmate-ssh-server` |
 
 The `event` value is a flat token of the form `<event_name>:<comma-separated-args>`
@@ -25,7 +25,8 @@ The `event` value is a flat token of the form `<event_name>:<comma-separated-arg
 ```bash
 pip install sigma-cli
 sigma check docs/security/sigma/tmate-ssh-server/
-# Convert to Loki (LogQL), for example:
+# Convert to Loki (LogQL), for example (install the Loki backend first):
+sigma plugin install loki
 sigma convert -t loki docs/security/sigma/tmate-ssh-server/server_config_disclosed.yml
 ```
 
