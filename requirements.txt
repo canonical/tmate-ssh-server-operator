@@ -1,5 +1,6 @@
 ops>=3,<4
 jinja2>=3,<4
+owasp-logger
 pydantic>=2,<3
 # Charmcraft copies these packaging tools into the shipped venv.
 setuptools>=78.1.1

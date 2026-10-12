@@ -13,6 +13,7 @@ import ops
 import actions
 import ssh_debug
 import tmate
+from security_log import owasp_log
 from state import State
 
 logger = logging.getLogger(__name__)
@@ -82,6 +83,10 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
+        owasp_log.sys_startup(
+            userid=self.unit.name,
+            description="tmate-ssh-server daemon started during charm installation",
+        )
         self.unit.status = ops.ActiveStatus()
 
     def _on_upgrade_charm(self, _: ops.UpgradeCharmEvent) -> None:
@@ -123,6 +128,11 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             except tmate.DaemonError:
                 logger.exception("tmate-ssh-server daemon not active.")
                 raise
+
+            owasp_log.sys_restart(
+                userid=self.unit.name,
+                description="tmate-ssh-server daemon restarted after being found not running",
+            )
 
             logger.info("Removing stopped containers.")
             try:

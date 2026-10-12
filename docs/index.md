@@ -23,7 +23,7 @@ runner VMs managed by that charm.
 |                 |                                                                                                                                                                                                                       |
 |-----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | **Get started** | [Deploy the tmate SSH server charm](tutorial/getting-started.md)                                                                                                                                                      |
-| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Relation endpoints](reference/relations.md) \|   [Upgrade](how-to/upgrade.md) |
+| **Operations**  | [Get server config](how-to/get-server-config.md) \| [Access security logs](how-to/access-security-logs.md) \| [Actions](reference/actions.md) \| [Configurations](reference/configurations.md) \| [Relation endpoints](reference/relations.md) \|   [Upgrade](how-to/upgrade.md) |
 | **Design**      | [Charm architecture](reference/charm-architecture.md)                                                                                                                   |
 
 ## How this documentation is organized
@@ -57,6 +57,7 @@ Thinking about using the tmate SSH server operator for your next project?
   1. [Getting Started](tutorial/getting-started.md)
 1. [How to](how-to)
   1. [Get server config](how-to/get-server-config.md)
+  1. [Access security logs](how-to/access-security-logs.md)
   1. [Upgrade](how-to/upgrade.md)
 1. [Reference](reference)
   1. [Actions](reference/actions.md)

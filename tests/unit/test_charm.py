@@ -3,7 +3,7 @@
 
 """tmate-ssh-server charm unit tests."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import ops
 import pytest
@@ -326,3 +326,75 @@ def test__on_upgrade_charm_error(monkeypatch: pytest.MonkeyPatch, charm):
         charm._on_upgrade_charm(MagicMock(spec=ops.UpgradeCharmEvent))
 
     assert charm.unit.status.name == "maintenance"
+
+
+def test__on_install_emits_sys_startup(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a monkeypatched successful tmate installation and a patched owasp_log.
+    act: when _on_install completes and the daemon is brought up.
+    assert: a single sys_startup security event is emitted for audit of the startup.
+    """
+    monkeypatch.setattr(tmate, "install_dependencies", MagicMock(spec=tmate.install_dependencies))
+    monkeypatch.setattr(tmate, "install_keys", MagicMock(spec=tmate.install_keys))
+    monkeypatch.setattr(
+        tmate, "ensure_daemon_running", MagicMock(spec=tmate.ensure_daemon_running)
+    )
+    monkeypatch.setattr(tmate, "get_fingerprints", MagicMock(spec=tmate.get_fingerprints))
+
+    with patch("charm.owasp_log") as mock_log:
+        charm._on_install(MagicMock(spec=ops.InstallEvent))
+
+    mock_log.sys_startup.assert_called_once()
+
+
+def test__on_update_status_restart_emits_sys_restart(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a daemon reported as not running and a patched owasp_log.
+    act: when _on_update_status self-heals by restarting the daemon.
+    assert: a single sys_restart security event is emitted for audit of the restart.
+    """
+    monkeypatch.setattr(
+        tmate, "status", MagicMock(return_value=tmate.DaemonStatus(running=False, status=""))
+    )
+    monkeypatch.setattr(
+        tmate, "ensure_daemon_running", MagicMock(spec=tmate.ensure_daemon_running)
+    )
+    monkeypatch.setattr(
+        tmate, "remove_stopped_containers", MagicMock(spec=tmate.remove_stopped_containers)
+    )
+
+    with patch("charm.owasp_log") as mock_log:
+        charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+    mock_log.sys_restart.assert_called_once()
+
+
+def test__on_update_status_running_emits_no_sys_restart(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a daemon reported as running and a patched owasp_log.
+    act: when _on_update_status finds nothing to heal.
+    assert: no sys_restart security event is emitted, so a healthy poll stays silent.
+    """
+    monkeypatch.setattr(
+        tmate, "status", MagicMock(return_value=tmate.DaemonStatus(running=True, status=""))
+    )
+    monkeypatch.setattr(
+        tmate, "ensure_daemon_running", MagicMock(spec=tmate.ensure_daemon_running)
+    )
+    monkeypatch.setattr(
+        tmate, "remove_stopped_containers", MagicMock(spec=tmate.remove_stopped_containers)
+    )
+
+    with patch("charm.owasp_log") as mock_log:
+        charm._on_update_status(MagicMock(spec=ops.UpdateStatusEvent))
+
+    mock_log.sys_restart.assert_not_called()
