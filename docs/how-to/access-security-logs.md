@@ -8,8 +8,8 @@ The charm currently emits the following security events:
 
 | Event | When |
 |-------|------|
-| `sys_startup` | The tmate SSH server daemon is started during charm installation. |
-| `sys_restart` | The daemon is found not running during a status check and is restarted. |
+| `sys_startup:<unit>` | The tmate SSH server daemon is started during charm installation. |
+| `sys_restart:<unit>` | The daemon is found not running during a status check and is restarted. |
 | `authz_admin:<unit>,get-server-config` | The server configuration (host and SSH key fingerprints) is disclosed via the `get-server-config` Juju action. |
 
 ## Forwarding path

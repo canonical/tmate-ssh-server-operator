@@ -74,6 +74,10 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
+        owasp_log.sys_startup(
+            userid=self.unit.name,
+            description="tmate-ssh-server daemon started during charm installation",
+        )
 
         try:
             fingerprints = tmate.get_fingerprints()
@@ -83,10 +87,6 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
-        owasp_log.sys_startup(
-            userid=self.unit.name,
-            description="tmate-ssh-server daemon started during charm installation",
-        )
         self.unit.status = ops.ActiveStatus()
 
     def _on_upgrade_charm(self, _: ops.UpgradeCharmEvent) -> None:
