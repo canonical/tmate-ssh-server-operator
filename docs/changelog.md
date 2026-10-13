@@ -6,7 +6,7 @@ This changelog documents user-relevant changes to the tmate SSH server charm.
 
 ### Added
 
-- Emit OWASP-structured security event logs (`sys_startup`, `sys_restart`, and `authz_admin` for the `get-server-config` action). See [How to access security logs](how-to/access-security-logs.md).
+- Emit OWASP-structured security event logs (`sys_startup`, `sys_restart`, and `authz_admin` for the `get-server-config` action). See [Security logs](reference/security-logs.md).
 
 ## 2026-10-07
 

@@ -1,4 +1,4 @@
-# How to access security logs
+# Security logs
 
 The tmate SSH server charm emits [OWASP](https://owasp.org/)-structured security
 event logs for auditing. Each event is a JSON object nested under an `owasp_event`
