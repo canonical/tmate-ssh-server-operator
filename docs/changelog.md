@@ -2,6 +2,12 @@
 
 This changelog documents user-relevant changes to the tmate SSH server charm.
 
+## 2026-10-14
+
+### Added
+
+- Add a CC008-compliant Terraform module under `terraform/charm` to deploy the charm, with CI workflows for testing, compliance checking, release tagging and documentation generation.
+
 ## 2026-10-12
 
 ### Added
