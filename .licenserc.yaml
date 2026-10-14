@@ -32,6 +32,7 @@ header:
     - 'icon.svg'
     - 'LICENSE'
     - '**/MAJOR_VERSION'
+    - '**/uv.lock'
     - 'trivy.yaml'
     - 'zap_rules.tsv'
     - 'lib/**'
