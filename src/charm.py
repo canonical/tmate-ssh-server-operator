@@ -13,6 +13,7 @@ import ops
 import actions
 import ssh_debug
 import tmate
+from security_log import owasp_log
 from state import State
 
 logger = logging.getLogger(__name__)
@@ -73,6 +74,10 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
+        owasp_log.sys_startup(
+            userid=self.unit.name,
+            description="tmate-ssh-server daemon started during charm installation",
+        )
 
         try:
             fingerprints = tmate.get_fingerprints()
@@ -123,6 +128,11 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
             except tmate.DaemonError:
                 logger.exception("tmate-ssh-server daemon not active.")
                 raise
+
+            owasp_log.sys_restart(
+                userid=self.unit.name,
+                description="tmate-ssh-server daemon restarted after being found not running",
+            )
 
             logger.info("Removing stopped containers.")
             try:
