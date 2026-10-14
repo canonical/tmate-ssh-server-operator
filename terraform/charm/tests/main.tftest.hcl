@@ -22,7 +22,7 @@ run "basic_deploy" {
   }
 
   assert {
-    condition     = output.provides.value.endpoint == "debug-ssh"
-    error_message = "tmate-ssh-server module should provide 'provides.value' output"
+    condition     = output.provides.debug_ssh.endpoint == "debug-ssh"
+    error_message = "tmate-ssh-server module should provide 'provides.debug_ssh' output"
   }
 }
