@@ -145,3 +145,6 @@ dmypy.json
 !.vale/styles/config/vocabularies/local
 # END VALE WORKFLOW IGNORE
 
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
