@@ -21,7 +21,7 @@ jobs:
         -c "chmod +x tests/integration/pre_run_script.sh
         ./tests/integration/pre_run_script.sh"
       runs-on: ubuntu-24.04
-      modules: '["test_charm", "test_proxy"]'
+      modules: '["test_charm", "test_proxy", "test_upgrade"]'
   allure-report:
     if: ${{ !cancelled() && github.event_name == 'schedule' }}
     needs: integration-tests
