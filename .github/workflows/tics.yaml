@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
       - name: Install dependencies and linters
         # Test dependencies too: TICS runs pylint on tests/, which reports unresolved imports
         run: >-
