@@ -14,3 +14,10 @@ jobs:
       packages: write
       actions: read
     secrets: inherit
+
+  secscan:
+    needs: publish-to-edge
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/secscan.yaml # zizmor: ignore[self-repository]
