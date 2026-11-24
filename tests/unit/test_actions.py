@@ -3,7 +3,7 @@
 
 """tmate-ssh-server charm actions unit tests."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import ops
 import pytest
@@ -72,3 +72,31 @@ def test_on_get_server_config(
     charm.actions.on_get_server_config(mock_event)
 
     mock_event.set_results.assert_called_once_with({"tmate-config": value})
+
+
+def test_on_get_server_config_emits_authz_admin(
+    monkeypatch: pytest.MonkeyPatch,
+    charm: TmateSSHServerOperatorCharm,
+):
+    """
+    arrange: given a monkeypatched tmate.generate_tmate_conf and a patched owasp_log.
+    act: when on_get_server_config discloses the server configuration.
+    assert: an authz_admin security event is emitted, so the disclosure is audited.
+    """
+    monkeypatch.setattr(
+        tmate,
+        "generate_tmate_conf",
+        MagicMock(spec=tmate.generate_tmate_conf, return_value="test_config_value"),
+    )
+
+    with patch("actions.owasp_log") as mock_log:
+        charm.actions.on_get_server_config(MagicMock(spec=ops.ActionEvent))
+
+    mock_log.authz_admin.assert_called_once_with(
+        userid=charm.unit.name,
+        admin_activity="get-server-config",
+        description=(
+            "tmate server configuration (host and SSH key fingerprints) "
+            "disclosed via Juju action"
+        ),
+    )

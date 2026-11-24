@@ -1,0 +1,26 @@
+name: Sigma rules validation
+
+on:
+  pull_request:
+    paths:
+      - 'docs/security/sigma/**'
+      - 'tox.ini'
+      - '.github/workflows/sigma_lint.yaml'
+
+jobs:
+  sigma-lint:
+    name: Sigma rules validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install tox
+        run: python -m pip install tox
+
+      - name: Validate Sigma detection rules
+        run: tox -e sigma-lint

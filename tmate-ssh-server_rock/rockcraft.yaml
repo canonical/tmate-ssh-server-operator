@@ -4,7 +4,7 @@
 name: tmate-ssh-server
 summary: Tmate SSH server rock
 description: tmate-ssh-server OCI image for the tmate-ssh-server-k8s charm
-version: "1.0"
+version: "1.1"
 base: ubuntu@22.04
 build-base: ubuntu@22.04
 license: Apache-2.0

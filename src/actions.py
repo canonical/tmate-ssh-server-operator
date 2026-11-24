@@ -8,6 +8,7 @@ import logging
 import ops
 
 import tmate
+from security_log import owasp_log
 from state import State
 
 logger = logging.getLogger(__name__)
@@ -44,4 +45,12 @@ class Observer(ops.Object):
             logger.error("Failed to generate .tmate.conf, %s.", exc)
             event.fail("Failed to generate .tmate.conf. See juju debug-log output.")
             return
+        owasp_log.authz_admin(
+            userid=self.charm.unit.name,
+            admin_activity="get-server-config",
+            description=(
+                "tmate server configuration (host and SSH key fingerprints) "
+                "disclosed via Juju action"
+            ),
+        )
         event.set_results({"tmate-config": conf})

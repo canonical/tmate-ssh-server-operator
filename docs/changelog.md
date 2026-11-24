@@ -2,6 +2,32 @@
 
 This changelog documents user-relevant changes to the tmate SSH server charm.
 
+## 2026-10-14
+
+### Added
+
+- Add a CC008-compliant Terraform module under `terraform/charm` to deploy the charm, with CI workflows for testing, compliance checking, release tagging and documentation generation.
+
+## 2026-10-12
+
+### Added
+
+- Emit OWASP-structured security event logs (`sys_startup`, `sys_restart`, and `authz_admin` for the `get-server-config` action). See [Security logs](reference/security-logs.md).
+- Add vendor-neutral Sigma detection rules for the charm security events under `docs/security/sigma/tmate-ssh-server/`, with a `tox -e sigma-lint` validation environment.
+
+## 2026-10-07
+
+### Fixed
+
+- Remove tmate server containers that the charm did not start before restarting the workload, so they cannot keep the SSH port and block an upgrade.
+
+## 2026-10-05
+
+### Fixed
+
+- Refresh the tmate server image and require patched `setuptools` and `wheel` in the charm.
+- Restart the workload on charm upgrade when its service changes, so existing units receive the refreshed image.
+
 ## 2025-12-17
 
 - Moved charm-architecture.md from Explanation to Reference category.

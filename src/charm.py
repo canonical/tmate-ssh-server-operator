@@ -13,6 +13,7 @@ import ops
 import actions
 import ssh_debug
 import tmate
+from security_log import owasp_log
 from state import State
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
         self.sshdebug = ssh_debug.Observer(self, self.state)
 
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.upgrade_charm, self._on_upgrade_charm)
         self.framework.observe(self.on.update_status, self._on_update_status)
 
     def _on_install(self, event: ops.InstallEvent) -> None:
@@ -68,10 +70,14 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         try:
             self.unit.status = ops.MaintenanceStatus("Starting tmate-ssh-server daemon.")
-            tmate.start_daemon(address=str(self.state.ip_addr))
+            tmate.ensure_daemon_running(address=str(self.state.ip_addr))
         except tmate.DaemonError as exc:
             logger.error("Failed to start tmate-ssh-server daemon, %s.", exc)
             raise
+        owasp_log.sys_startup(
+            userid=self.unit.name,
+            description="tmate-ssh-server daemon started during charm installation",
+        )
 
         try:
             fingerprints = tmate.get_fingerprints()
@@ -81,6 +87,26 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
         self.unit.open_port("tcp", tmate.PORT)
         self.sshdebug.update_relation_data(host=str(self.state.ip_addr), fingerprints=fingerprints)
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_upgrade_charm(self, _: ops.UpgradeCharmEvent) -> None:
+        """Apply the refreshed image to the existing workload.
+
+        Raises:
+            DaemonError: if the workload cannot restart with the refreshed image.
+        """
+        # Juju reports no address before the machine's network is up; a still-deferred
+        # install then starts the daemon from the refreshed unit once it has one.
+        if not self.state.ip_addr:
+            logger.warning("Unit address not assigned. Stop further execution of the hook.")
+            return
+
+        self.unit.status = ops.MaintenanceStatus("Upgrading tmate-ssh-server daemon.")
+        try:
+            tmate.ensure_daemon_running(address=str(self.state.ip_addr))
+        except tmate.DaemonError:
+            logger.exception("Failed to upgrade tmate-ssh-server daemon.")
+            raise
         self.unit.status = ops.ActiveStatus()
 
     def _on_update_status(self, _: ops.UpdateStatusEvent) -> None:
@@ -98,10 +124,15 @@ class TmateSSHServerOperatorCharm(ops.CharmBase):
 
             logger.info("Will restart tmate-ssh-server daemon.")
             try:
-                tmate.start_daemon(address=str(self.state.ip_addr))
+                tmate.ensure_daemon_running(address=str(self.state.ip_addr))
             except tmate.DaemonError:
                 logger.exception("tmate-ssh-server daemon not active.")
                 raise
+
+            owasp_log.sys_restart(
+                userid=self.unit.name,
+                description="tmate-ssh-server daemon restarted after being found not running",
+            )
 
             logger.info("Removing stopped containers.")
             try:
